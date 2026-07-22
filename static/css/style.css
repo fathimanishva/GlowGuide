@@ -15,3 +15,60 @@ p {
     font-size: 20px;
     color: #555;
 }
+
+body{
+    background-color:#FFF7FA;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.hero-title{
+    color:#ff4d8d;
+    font-weight:bold;
+}
+
+.hero-section{
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg,#fffafc 0%,#ffeef5 45% ,#fff8fb 100%);
+    padding:90px 0;
+}
+
+.hero-section::before{
+    content:"";
+    position:absolute;
+    width:450px;
+    height:450px;
+    background:#ffd6e7;
+    border-radius:50%;
+    filter:blur(140px);
+    top:10%;
+    right:5%;
+    opacity:.25;
+}
+
+.hero-section::after{
+    content:"";
+    position:absolute;
+    width:300px;
+    height:300px;
+    background:#ffd9f0;
+    border-radius:50%;
+    filter:blur(100px);
+    bottom:-120px;
+    left:-120px;
+    opacity:.25;
+}
+.hero-section h1{
+    font-size: 4rem;   /* if it's around 5rem now */
+    line-height: 1.1;
+}
+.hero-image{
+    max-width: 520px;
+}
+.ai-card{
+    box-shadow: 0 15px 35px rgba(255,120,170,.15);
+}
+.hero-text p{
+    margin-top: 25px;
+    margin-bottom: 35px;
+}

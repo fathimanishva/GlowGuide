@@ -5,13 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlowGuide</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
 
-    <h1>🌸 Welcome to GlowGuide</h1>
-    <p>Your skincare journey starts here.</p>
+    <!-- Navigation Bar -->
+     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
 
+        <a class="navbar-brand fw-bold text-primary" href="#">
+            🌸 GlowGuide
+        </a>
+
+        <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Home</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Features</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="btn btn-primary ms-3" href="#">
+                        Login
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+</nav>
+
+
+
+    <!-- Hero Section -->
+<section class="hero-section">
+    <div class="row align-items-center">
+
+        <div class="col-lg-6">
+            <h1 class="display-3 hero-title">
+                AI-Powered Personalized Skincare Guidance
+            </h1>
+
+            <p class="lead mt-3">
+                Discover skincare recommendations tailored to your skin type using artificial intelligence.
+            </p>
+
+            <a href="#" class="btn btn-primary btn-lg mt-3">
+                Get Started
+            </a>
+
+            <a href="#" class="btn btn-outline-secondary btn-lg mt-3 ms-2">
+                Learn More
+            </a>
+        </div>
+
+        <div class="col-lg-6 text-center">
+            <img src="{{ url_for('static', filename='images/hero.png') }}"
+     alt="GlowGuide AI Skincare"
+     class="img-fluid">
+        </div>
+
+    </div>
+</section>
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
