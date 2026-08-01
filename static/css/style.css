@@ -72,3 +72,51 @@ body{
     margin-top: 25px;
     margin-bottom: 35px;
 }
+/* ================= LOGIN PAGE ================= */
+
+body{
+    background: linear-gradient(135deg,#fff9fc,#ffeef5,#fff9fc);
+}
+
+.login-card{
+    max-width:450px;
+    width:100%;
+    border:none;
+    border-radius:20px;
+    background:#ffffff;
+}
+
+.login-card h2{
+    color:#ff4f94;
+    font-weight:700;
+}
+
+.form-control{
+    border-radius:10px;
+    padding:12px;
+}
+
+.btn-primary{
+    background:#ff4f94;
+    border:none;
+    border-radius:10px;
+    padding:12px;
+}
+
+.btn-primary:hover{
+    background:#e63f83;
+}
+
+.login-card a{
+    color:#ff4f94;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.login-card a:hover{
+    text-decoration:underline;
+}
+#togglePassword,
+#toggleConfirmPassword {
+    cursor: pointer;
+}
