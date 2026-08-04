@@ -120,3 +120,15 @@ body{
 #toggleConfirmPassword {
     cursor: pointer;
 }
+.card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+.btn {
+    border-radius: 10px;
+}

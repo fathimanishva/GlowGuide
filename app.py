@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request, redirect, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 app.secret_key = "glowguide_secret_key"
 
@@ -32,7 +37,7 @@ def login():
         conn.close()
 
         if user and check_password_hash(user["password"], password):
-            session["user"] = user["email"]
+            session["user"] = user["fullname"]
             return redirect("/dashboard")
 
         else:
@@ -40,13 +45,38 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+
+    image_name = None
+    success = None
+
+    if request.method == "POST":
+
+        file = request.files.get("image")
+
+        if file and file.filename != "":
+
+            filename = secure_filename(file.filename)
+
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+            image_name = filename
+            success = "Image uploaded successfully!"
+
+    return render_template(
+        "upload.html",
+        image_name=image_name,
+        success=success
+    )
+
 @app.route("/dashboard")
 def dashboard():
 
     if "user" not in session:
         return redirect("/login")
 
-    return f"Welcome {session['user']}!"
+    return render_template("dashboard.html")
 
 @app.route("/logout")
 def logout():
