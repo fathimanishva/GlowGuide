@@ -44,56 +44,114 @@
 
         <form method="POST" enctype="multipart/form-data">
 
-            {% if success %}
+    {% if success %}
 
-        <div class="alert alert-success mt-4">
-             {{ success }}
-        </div>
+    <div class="alert alert-success mt-4 text-center">
+        {{ success }}
+    </div>
 
-        {% endif %}
+    {% endif %}
 
-        <div class="alert alert-info mt-3">
 
-            <h5>📷 Photo Guidelines</h5>
+    <div class="alert alert-info mt-3">
 
-            <ul class="mb-0">
+        <h5>📷 Photo Guidelines</h5>
+
+        <ul class="mb-0">
             <li>Upload a clear front-facing photo of your face.</li>
             <li>Ensure your face is fully visible.</li>
             <li>Use good natural or bright lighting.</li>
             <li>Remove glasses, masks, or heavy makeup if possible.</li>
             <li>Avoid blurry, dark, or side-angle photos.</li>
             <li>Accepted formats: JPG, JPEG, PNG.</li>
-            </ul>
-
-        </div>
-
-        {% if image_name %}
-
-        <div class="text-center mt-4">
-
-    <h5>Uploaded Image</h5>
-
-    <img
-        src="{{ url_for('static', filename='uploads/' + image_name) }}"
-        class="img-fluid rounded shadow mt-3"
-        style="max-width:350px;">
+        </ul>
 
     </div>
 
-    {% endif %}
 
-            <input
+   {% if image_name %}
+
+    <!-- Current Uploaded Image -->
+
+    <div class="text-center mt-4">
+
+        <h5>Current Uploaded Image</h5>
+
+        <img
+            src="{{ url_for('static', filename='uploads/' + image_name) }}"
+            class="img-fluid rounded shadow mt-3"
+            style="max-width:350px;"
+        >
+
+    </div>
+
+
+    <!-- Analyze Button -->
+
+    <div class="text-center mt-4">
+
+        <a href="{{ url_for('analysis') }}"
+           class="btn btn-success btn-lg px-5">
+
+            <i class="bi bi-search me-2"></i>
+            Analyze Image
+
+        </a>
+
+    </div>
+
+
+    <hr class="my-4">
+
+    <!-- Upload Another Image -->
+
+    <div class="mt-4">
+
+        <h5 class="text-center">
+            📷 Want to use a different photo?
+        </h5>
+
+        <input
             type="file"
             name="image"
-            class="form-control mb-4"
-            accept=".jpg,.jpeg,.png,image/*"
-            required>
+            class="form-control mb-3"
+            accept=".jpg,.jpeg,.png"
+        >
 
-            <button class="btn btn-primary">
-            Upload Image
+        <button type="submit"
+                class="btn btn-primary w-100">
+
+            <i class="bi bi-cloud-arrow-up-fill me-2"></i>
+            Upload New Image
+
         </button>
 
-        </form>
+    </div>
+
+
+{% else %}
+
+    <!-- First Image Upload -->
+
+    <input
+        type="file"
+        name="image"
+        class="form-control mb-4"
+        accept=".jpg,.jpeg,.png"
+        required
+    >
+
+    <button type="submit"
+            class="btn btn-primary w-100">
+
+        <i class="bi bi-cloud-arrow-up-fill me-2"></i>
+        Upload Image
+
+    </button>
+
+{% endif %}
+
+</form>
 
     </div>
 

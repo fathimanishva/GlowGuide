@@ -3,6 +3,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from werkzeug.utils import secure_filename
+from ai.skin_analyzer import analyze_skin
 
 app = Flask(__name__)
 
@@ -48,7 +49,7 @@ def login():
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
 
-    image_name = None
+    image_name = session.get("image_name")
     success = None
 
     if request.method == "POST":
@@ -59,7 +60,12 @@ def upload():
 
             filename = secure_filename(file.filename)
 
-            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            file.save(
+                os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            )
+
+            # Replace the previous image
+            session["image_name"] = filename
 
             image_name = filename
             success = "Image uploaded successfully!"
@@ -68,6 +74,83 @@ def upload():
         "upload.html",
         image_name=image_name,
         success=success
+    )
+
+@app.route("/analysis")
+def analysis():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    image_name = session.get("image_name")
+
+    if not image_name:
+        return redirect("/upload")
+
+    return render_template(
+        "analysis.html",
+        image_name=image_name
+    )
+
+@app.route("/analyze-skin", methods=["POST"])
+def analyze_skin_route():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    image_name = session.get("image_name")
+
+    if not image_name:
+        return redirect("/upload")
+
+    image_path = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        image_name
+    )
+
+    # Run AI analysis
+    results = analyze_skin(image_path)
+
+    # Find the result with the highest confidence
+    best_result = max(results, key=lambda x: x["score"])
+
+    skin_type = best_result["label"].lower()
+
+    # Recommendations based on skin type
+    recommendations = {
+        "dry": [
+            "Use a gentle, hydrating cleanser.",
+            "Apply a moisturizer regularly.",
+            "Avoid very hot water and harsh cleansers.",
+            "Use sunscreen during the daytime."
+        ],
+
+        "oily": [
+            "Use a gentle cleanser suitable for oily skin.",
+            "Choose lightweight, non-comedogenic moisturizers.",
+            "Avoid excessive washing, which can irritate the skin.",
+            "Use sunscreen during the daytime."
+        ],
+
+        "normal": [
+            "Use a gentle cleanser.",
+            "Keep your skin moisturized.",
+            "Use sunscreen during the daytime.",
+            "Maintain a consistent skincare routine."
+        ]
+    }
+
+    selected_recommendations = recommendations.get(
+        skin_type,
+        []
+    )
+
+    return render_template(
+        "results.html",
+        image_name=image_name,
+        results=results,
+        skin_type=skin_type,
+        recommendations=selected_recommendations
     )
 
 @app.route("/dashboard")
