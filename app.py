@@ -39,6 +39,7 @@ def login():
 
         if user and check_password_hash(user["password"], password):
             session["user"] = user["fullname"]
+            session["user_email"] = user["email"]
             return redirect("/dashboard")
 
         else:
@@ -116,6 +117,25 @@ def analyze_skin_route():
 
     skin_type = best_result["label"].lower()
 
+    # Save AI analysis to history
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO analysis_history
+    (user_email, method, skin_type, confidence, image_name)
+    VALUES (?, ?, ?, ?, ?)
+    """, (
+    session["user_email"],
+    "AI Image",
+    skin_type,
+    best_result["score"],
+    image_name
+    ))
+
+    conn.commit()
+    conn.close()
+
     # Recommendations based on skin type
     recommendations = {
         "dry": [
@@ -151,6 +171,91 @@ def analyze_skin_route():
         results=results,
         skin_type=skin_type,
         recommendations=selected_recommendations
+    )
+@app.route("/questionnaire", methods=["GET", "POST"])
+def questionnaire():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        # Get answers from the questionnaire
+        q1 = request.form.get("q1")
+        q2 = request.form.get("q2")
+        q3 = request.form.get("q3")
+        q4 = request.form.get("q4")
+        q5 = request.form.get("q5")
+
+        scores = {
+            "dry": 0,
+            "oily": 0,
+            "normal": 0,
+            "combination": 0
+        }
+
+        # Add scores based on answers
+        for answer in [q1, q2, q3, q4, q5]:
+
+            if answer in scores:
+                scores[answer] += 1
+
+        # Find the highest-scoring skin type
+        skin_type = max(scores, key=scores.get)
+
+        # Save questionnaire result in session
+        session["questionnaire_skin_type"] = skin_type
+
+        # Save questionnaire result to history
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        INSERT INTO analysis_history
+        (user_email, method, skin_type, confidence, image_name)
+        VALUES (?, ?, ?, ?, ?)
+        """, (
+        session["user_email"],
+        "Questionnaire",
+        skin_type,
+        None,
+        None
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return render_template(
+            "questionnaire_result.html",
+            skin_type=skin_type,
+            scores=scores
+        )
+
+    return render_template("questionnaire.html")
+
+@app.route("/history")
+def history():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM analysis_history
+        WHERE user_email = ?
+        ORDER BY analysis_date DESC
+    """, (session["user_email"],))
+
+    history_records = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "history.html",
+        history_records=history_records
     )
 
 @app.route("/dashboard")
