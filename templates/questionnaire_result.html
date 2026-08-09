@@ -35,6 +35,14 @@
         <h1 class="text-primary text-capitalize mb-4">
             {{ skin_type }} Skin
         </h1>
+        
+        <p class="mt-2">
+        <strong>Sensitivity:</strong>
+
+        <span class="text-capitalize">
+            {{ sensitivity.replace("_", " ") }}
+        </span>
+        </p>
 
         <p class="text-muted">
             This is a basic questionnaire-based estimate and is
@@ -62,6 +70,24 @@
         </div>
 
         {% endfor %}
+
+        <hr class="my-4">
+
+        <h4 class="fw-bold mb-3">
+            🌸 Personalized Recommendations
+        </h4>
+
+        <div class="text-start">
+
+        {% for recommendation in recommendations %}
+
+        <div class="alert alert-light border mb-2">
+            🌿 {{ recommendation }}
+        </div>
+
+        {% endfor %}
+
+    </div>
 
         <div class="mt-4">
 

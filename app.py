@@ -180,12 +180,20 @@ def questionnaire():
 
     if request.method == "POST":
 
-        # Get answers from the questionnaire
+        # Get answers
         q1 = request.form.get("q1")
         q2 = request.form.get("q2")
         q3 = request.form.get("q3")
         q4 = request.form.get("q4")
+
         q5 = request.form.get("q5")
+        q6 = request.form.get("q6")
+        q7 = request.form.get("q7")
+
+
+        # -----------------------------
+        # Skin type scoring
+        # -----------------------------
 
         scores = {
             "dry": 0,
@@ -194,45 +202,145 @@ def questionnaire():
             "combination": 0
         }
 
-        # Add scores based on answers
-        for answer in [q1, q2, q3, q4, q5]:
+        for answer in [q1, q2, q3, q4]:
 
             if answer in scores:
                 scores[answer] += 1
 
-        # Find the highest-scoring skin type
+
+        # Find highest skin-type score
         skin_type = max(scores, key=scores.get)
+
+
+        # -----------------------------
+        # Sensitivity scoring
+        # -----------------------------
+
+        sensitivity_scores = {
+            "not_sensitive": 0,
+            "somewhat_sensitive": 0,
+            "sensitive": 0
+        }
+
+        for answer in [q5, q6, q7]:
+
+            if answer in sensitivity_scores:
+                sensitivity_scores[answer] += 1
+
+
+        # Find highest sensitivity score
+        sensitivity = max(
+            sensitivity_scores,
+            key=sensitivity_scores.get
+        )
+
+
+        # -----------------------------
+        # Recommendations
+        # -----------------------------
+
+        recommendations = {
+
+            "dry": [
+                "Use a gentle, hydrating cleanser.",
+                "Apply moisturizer regularly.",
+                "Avoid very hot water and harsh cleansers.",
+                "Use sunscreen during the daytime."
+            ],
+
+            "oily": [
+                "Use a gentle cleanser suitable for oily skin.",
+                "Choose a lightweight, non-comedogenic moisturizer.",
+                "Avoid excessive washing.",
+                "Use sunscreen during the daytime."
+            ],
+
+            "normal": [
+                "Use a gentle cleanser.",
+                "Keep your skin moisturized.",
+                "Use sunscreen during the daytime.",
+                "Maintain a consistent skincare routine."
+            ],
+
+            "combination": [
+                "Use a gentle cleanser suitable for combination skin.",
+                "Use a lightweight moisturizer.",
+                "Give extra attention to oily areas such as the T-zone.",
+                "Avoid harsh products that can dry out other areas.",
+                "Use sunscreen during the daytime."
+            ]
+        }
+
+
+        selected_recommendations = recommendations.get(
+            skin_type,
+            []
+        )
+
+
+        # -----------------------------
+        # Additional sensitive-skin advice
+        # -----------------------------
+
+        if sensitivity == "sensitive":
+
+            selected_recommendations.extend([
+                "Choose fragrance-free skincare products.",
+                "Avoid harsh scrubs and irritating ingredients.",
+                "Introduce new skincare products gradually."
+            ])
+
+        elif sensitivity == "somewhat_sensitive":
+
+            selected_recommendations.extend([
+                "Prefer gentle skincare products.",
+                "Patch-test new products when possible."
+            ])
+
 
         # Save questionnaire result in session
         session["questionnaire_skin_type"] = skin_type
+        session["questionnaire_sensitivity"] = sensitivity
 
-        # Save questionnaire result to history
+
+        # -----------------------------
+        # Save result to history
+        # -----------------------------
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
-        INSERT INTO analysis_history
-        (user_email, method, skin_type, confidence, image_name)
-        VALUES (?, ?, ?, ?, ?)
+            INSERT INTO analysis_history
+            (user_email, method, skin_type, confidence, image_name)
+            VALUES (?, ?, ?, ?, ?)
         """, (
-        session["user_email"],
-        "Questionnaire",
-        skin_type,
-        None,
-        None
+            session["user_email"],
+            "Questionnaire",
+            skin_type,
+            None,
+            None
         ))
 
         conn.commit()
         conn.close()
 
+
+        # -----------------------------
+        # Show result page
+        # -----------------------------
+
         return render_template(
             "questionnaire_result.html",
             skin_type=skin_type,
+            sensitivity=sensitivity,
+            recommendations=selected_recommendations,
             scores=scores
         )
 
-    return render_template("questionnaire.html")
 
+    return render_template("questionnaire.html")
+    
 @app.route("/history")
 def history():
 
