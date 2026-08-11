@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session,url_for
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -24,6 +24,8 @@ def home():
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
+    error = None
+
     if request.method == "POST":
 
         email = request.form["email"]
@@ -32,20 +34,90 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        cursor.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email,)
+        )
+
         user = cursor.fetchone()
 
         conn.close()
 
         if user and check_password_hash(user["password"], password):
+
             session["user"] = user["fullname"]
             session["user_email"] = user["email"]
+
             return redirect("/dashboard")
 
         else:
-            return "Invalid Email or Password!"
+            error = "Incorrect email or password."
 
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        error=error
+    )
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = request.form["email"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email,)
+        )
+
+        user = cursor.fetchone()
+
+        conn.close()
+
+        if not user:
+            return "No account found with this email."
+
+        return redirect(
+            url_for("reset_password", email=email)
+        )
+
+    return render_template("forgot_password.html")
+
+@app.route("/reset-password/<email>", methods=["GET", "POST"])
+def reset_password(email):
+
+    if request.method == "POST":
+
+        new_password = request.form["password"]
+
+        hashed_password = generate_password_hash(
+            new_password
+        )
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE users
+            SET password = ?
+            WHERE email = ?
+        """, (
+            hashed_password,
+            email
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/login")
+
+    return render_template(
+        "reset_password.html",
+        email=email
+    )
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -373,6 +445,101 @@ def dashboard():
         return redirect("/login")
 
     return render_template("dashboard.html")
+
+@app.route("/recommendations")
+def recommendations():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    skin_type = session.get("questionnaire_skin_type")
+    sensitivity = session.get(
+        "questionnaire_sensitivity",
+        "not_sensitive"
+    )
+
+    if not skin_type:
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get products matching skin type
+    cursor.execute("""
+        SELECT *
+        FROM products
+        WHERE ',' || skin_types || ',' LIKE ?
+    """, (f"%,{skin_type},%",))
+
+    all_products = cursor.fetchall()
+
+    conn.close()
+
+    # --------------------------------
+    # Filter according to sensitivity
+    # --------------------------------
+
+    suitable_products = []
+
+    for product in all_products:
+
+        product_sensitivity = product["sensitivity"].split(",")
+
+        if sensitivity == "sensitive":
+
+            if (
+                "sensitive" in product_sensitivity
+                or "somewhat_sensitive" in product_sensitivity
+            ):
+                suitable_products.append(product)
+
+        elif sensitivity == "somewhat_sensitive":
+
+            if (
+                "sensitive" in product_sensitivity
+                or "somewhat_sensitive" in product_sensitivity
+            ):
+                suitable_products.append(product)
+
+        else:
+
+            suitable_products.append(product)
+
+    # --------------------------------
+    # Organize products by category
+    # --------------------------------
+
+    categories = [
+        "Face Wash",
+        "Serum",
+        "Toner",
+        "Moisturizer",
+        "Sunscreen"
+    ]
+
+    categorized_products = {}
+
+    for category in categories:
+
+        category_products = [
+            product
+            for product in suitable_products
+            if product["category"].lower() == category.lower()
+        ]
+
+        # Sort by price
+        category_products.sort(
+            key=lambda product: product["price"]
+        )
+
+        categorized_products[category] = category_products
+
+    return render_template(
+        "recommendations.html",
+        categorized_products=categorized_products,
+        skin_type=skin_type,
+        sensitivity=sensitivity
+    )
 
 @app.route("/logout")
 def logout():

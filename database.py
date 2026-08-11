@@ -25,8 +25,35 @@ CREATE TABLE IF NOT EXISTS analysis_history (
 )
 """)
 
+# Create products table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    brand TEXT NOT NULL,
+    category TEXT NOT NULL,
+    price REAL NOT NULL,
+    skin_types TEXT NOT NULL,
+    sensitivity TEXT NOT NULL,
+    description TEXT,
+    image TEXT,
+    product_link TEXT
+)
+""")
+
+# Add concerns column to products table if it doesn't exist
+try:
+    cursor.execute("""
+        ALTER TABLE products ADD COLUMN concerns TEXT
+    """)
+    print("Concerns column added.")
+except sqlite3.OperationalError:
+    print("Concerns column already exists.")
+
+
 conn.commit()
 
 print("Analysis history table is ready.")
+print("Products table is ready.")
 
 conn.close()
