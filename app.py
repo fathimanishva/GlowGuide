@@ -4,8 +4,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from werkzeug.utils import secure_filename
 from ai.skin_analyzer import analyze_skin
+from dotenv import load_dotenv
+import smtplib
+import secrets
+load_dotenv()
 
 app = Flask(__name__)
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -16,6 +22,46 @@ def get_db_connection():
     conn = sqlite3.connect("glowguide.db")
     conn.row_factory = sqlite3.Row
     return conn
+
+def send_otp_email(receiver_email, otp):
+
+    subject = "GlowGuide - Password Reset OTP"
+
+    message = f"""Subject: {subject}
+
+Your GlowGuide password reset OTP is:
+
+{otp}
+
+This OTP is valid for 5 minutes.
+
+If you did not request a password reset, please ignore this email.
+"""
+
+    try:
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+
+            server.starttls()
+
+            server.login(
+                MAIL_USERNAME,
+                MAIL_PASSWORD
+            )
+
+            server.sendmail(
+                MAIL_USERNAME,
+                receiver_email,
+                message
+            )
+
+        return True
+
+    except Exception as e:
+
+        print("Email sending error:", e)
+
+        return False
 
 @app.route('/')
 def home():
@@ -61,9 +107,12 @@ def login():
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
 
+    error = None
+    success = None
+
     if request.method == "POST":
 
-        email = request.form["email"]
+        email = request.form["email"].strip()
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -78,24 +127,136 @@ def forgot_password():
         conn.close()
 
         if not user:
-            return "No account found with this email."
 
-        return redirect(
-            url_for("reset_password", email=email)
+            error = "No account found with this email."
+
+            return render_template(
+                "forgot_password.html",
+                error=error
+            )
+
+        # Generate 6-digit OTP
+        otp = str(secrets.randbelow(900000) + 100000)
+
+        # Store OTP temporarily in session
+        session["reset_email"] = email
+        session["reset_otp"] = otp
+
+        # OTP expiry time
+        import time
+        session["reset_otp_expiry"] = time.time() + 300
+
+        # Send OTP
+        email_sent = send_otp_email(
+            email,
+            otp
         )
 
-    return render_template("forgot_password.html")
+        if not email_sent:
 
-@app.route("/reset-password/<email>", methods=["GET", "POST"])
-def reset_password(email):
+            session.pop("reset_email", None)
+            session.pop("reset_otp", None)
+            session.pop("reset_otp_expiry", None)
+
+            error = "Unable to send verification email. Please try again."
+
+            return render_template(
+                "forgot_password.html",
+                error=error
+            )
+
+        return redirect(
+            url_for("verify_otp")
+        )
+
+    return render_template(
+        "forgot_password.html",
+        error=error,
+        success=success
+    )
+
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp():
+
+    if "reset_email" not in session:
+        return redirect("/forgot-password")
+
+    error = None
+
+    if request.method == "POST":
+
+        entered_otp = request.form["otp"].strip()
+
+        stored_otp = session.get("reset_otp")
+        expiry = session.get("reset_otp_expiry")
+
+        # Check OTP expiry
+        import time
+
+        if not expiry or time.time() > expiry:
+
+            error = "OTP has expired. Please request a new OTP."
+
+            return render_template(
+                "verify_otp.html",
+                error=error
+            )
+
+        # Check OTP
+        if entered_otp != stored_otp:
+
+            error = "Incorrect OTP. Please try again."
+
+            return render_template(
+                "verify_otp.html",
+                error=error
+            )
+
+        # OTP is correct
+        session["otp_verified"] = True
+
+        # Remove OTP after successful verification
+        session.pop("reset_otp", None)
+        session.pop("reset_otp_expiry", None)
+
+        return redirect(
+            url_for("reset_password")
+        )
+
+    return render_template(
+        "verify_otp.html",
+        error=error
+    )
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+
+    if "reset_email" not in session:
+        return redirect("/forgot-password")
+
+    if not session.get("otp_verified"):
+        return redirect("/verify-otp")
+
+    error = None
 
     if request.method == "POST":
 
         new_password = request.form["password"]
 
+        if len(new_password) < 6:
+
+            error = "Password must be at least 6 characters."
+
+            return render_template(
+                "reset_password.html",
+                error=error
+            )
+
         hashed_password = generate_password_hash(
             new_password
         )
+
+        email = session["reset_email"]
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -112,11 +273,15 @@ def reset_password(email):
         conn.commit()
         conn.close()
 
+        # Clear password reset session data
+        session.pop("reset_email", None)
+        session.pop("otp_verified", None)
+
         return redirect("/login")
 
     return render_template(
         "reset_password.html",
-        email=email
+        error=error
     )
 
 @app.route("/upload", methods=["GET", "POST"])
@@ -438,6 +603,74 @@ def history():
         history_records=history_records
     )
 
+@app.route("/change-password", methods=["GET", "POST"])
+def change_password():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    error = None
+    success = None
+
+    if request.method == "POST":
+
+        current_password = request.form["current_password"]
+        new_password = request.form["new_password"]
+        confirm_password = request.form["confirm_password"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (session["user_email"],)
+        )
+
+        user = cursor.fetchone()
+
+        # Check current password
+        if not user or not check_password_hash(
+            user["password"],
+            current_password
+        ):
+            error = "Current password is incorrect."
+
+        # Check new password length
+        elif len(new_password) < 6:
+            error = "New password must be at least 6 characters."
+
+        # Check passwords match
+        elif new_password != confirm_password:
+            error = "New passwords do not match."
+
+        else:
+
+            hashed_password = generate_password_hash(new_password)
+
+            cursor.execute(
+                """
+                UPDATE users
+                SET password = ?
+                WHERE email = ?
+                """,
+                (
+                    hashed_password,
+                    session["user_email"]
+                )
+            )
+
+            conn.commit()
+
+            success = "Password changed successfully."
+
+        conn.close()
+
+    return render_template(
+        "change_password.html",
+        error=error,
+        success=success
+    )
+
 @app.route("/dashboard")
 def dashboard():
 
@@ -445,6 +678,51 @@ def dashboard():
         return redirect("/login")
 
     return render_template("dashboard.html")
+
+@app.route("/profile")
+def profile():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get logged-in user's details
+    cursor.execute(
+        "SELECT fullname, email FROM users WHERE email = ?",
+        (session["user_email"],)
+    )
+
+    user = cursor.fetchone()
+
+    # Count user's analyses
+    cursor.execute(
+        "SELECT COUNT(*) FROM analysis_history WHERE user_email = ?",
+        (session["user_email"],)
+    )
+
+    analysis_count = cursor.fetchone()[0]
+
+    # Get latest analysis
+    cursor.execute("""
+        SELECT skin_type, method
+        FROM analysis_history
+        WHERE user_email = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (session["user_email"],))
+
+    latest_analysis = cursor.fetchone()
+
+    conn.close()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        analysis_count=analysis_count,
+        latest_analysis=latest_analysis
+    )
 
 @app.route("/recommendations")
 def recommendations():

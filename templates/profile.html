@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile - GlowGuide</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body class="bg-light">
+
+
+<!-- Navbar -->
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+
+    <div class="container">
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="navbar-brand fw-bold text-primary">
+
+            🌸 GlowGuide
+
+        </a>
+
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="btn btn-outline-primary">
+
+            <i class="bi bi-arrow-left"></i>
+            Dashboard
+
+        </a>
+
+    </div>
+
+</nav>
+
+
+<!-- Profile -->
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body p-5 text-center">
+
+
+                    <!-- Profile Icon -->
+
+                    <div class="mb-3">
+
+                        <i
+                            class="bi bi-person-circle text-primary"
+                            style="font-size: 80px;">
+                        </i>
+
+                    </div>
+
+
+                    <h3 class="fw-bold">
+
+                        {{ user["fullname"] }}
+
+                    </h3>
+
+
+                    <p class="text-muted">
+
+                        <i class="bi bi-envelope"></i>
+
+                        {{ user["email"] }}
+
+                    </p>
+
+
+                    <hr>
+
+
+                    <!-- Latest Analysis -->
+
+                    <div class="row text-center mt-4">
+
+
+                        <div class="col-6">
+
+                            <h6 class="text-muted">
+                                Latest Skin Type
+                            </h6>
+
+                            {% if latest_analysis %}
+
+                            <h5 class="fw-bold text-primary">
+
+                                {{ latest_analysis["skin_type"]|capitalize }}
+
+                            </h5>
+
+                            {% else %}
+
+                            <p class="text-muted">
+                                Not analyzed yet
+                            </p>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="col-6">
+
+                            <h6 class="text-muted">
+                                Total Analyses
+                            </h6>
+
+                            <h5 class="fw-bold text-success">
+
+                                {{ analysis_count }}
+
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+
+                    <hr class="my-4">
+
+
+                    <!-- Latest Method -->
+
+                    {% if latest_analysis %}
+
+                    <div class="mb-4">
+
+                        <p class="text-muted mb-1">
+                            Latest Assessment Method
+                        </p>
+
+                        <h6 class="fw-bold">
+
+                            {{ latest_analysis["method"] }}
+
+                        </h6>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- Buttons -->
+
+                    <div class="d-grid gap-2">
+
+
+                        <a
+                            href="{{ url_for('history') }}"
+                            class="btn btn-outline-primary">
+
+                            <i class="bi bi-clock-history"></i>
+
+                            View Analysis History
+
+                        </a>
+
+
+                        <a
+                            href="{{ url_for('change_password') }}"
+                            class="btn btn-outline-secondary">
+
+                            <i class="bi bi-key"></i>
+
+                            Change Password
+
+                        </a>
+
+
+                        <a
+                            href="{{ url_for('logout') }}"
+                            class="btn btn-outline-danger">
+
+                            <i class="bi bi-box-arrow-right"></i>
+
+                            Logout
+
+                        </a>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+
+</html>
