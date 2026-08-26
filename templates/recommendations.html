@@ -84,10 +84,10 @@
 
                         {% if product["image"] %}
 
-                        <img src="{{ product['image'] }}"
-                             class="card-img-top"
-                             alt="{{ product['name'] }}"
-                             style="height:220px; object-fit:contain;">
+                        <img src="{{ url_for('static', filename=product['image']) }}"
+                            class="card-img-top"
+                            alt="{{ product['name'] }}"
+                            style="height:220px; object-fit:contain;">
 
                         {% else %}
 

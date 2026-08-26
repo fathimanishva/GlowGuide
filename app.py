@@ -742,12 +742,16 @@ def recommendations():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # --------------------------------
     # Get products matching skin type
+    # --------------------------------
+
     cursor.execute("""
         SELECT *
         FROM products
-        WHERE ',' || skin_types || ',' LIKE ?
-    """, (f"%,{skin_type},%",))
+        WHERE ',' || LOWER(REPLACE(skin_types, ' ', '')) || ','
+        LIKE ?
+    """, (f"%,{skin_type.lower()},%",))
 
     all_products = cursor.fetchall()
 
@@ -761,8 +765,13 @@ def recommendations():
 
     for product in all_products:
 
-        product_sensitivity = product["sensitivity"].split(",")
+        # Convert database value into a clean list
+        product_sensitivity = [
+            value.strip().lower()
+            for value in product["sensitivity"].split(",")
+        ]
 
+        # Sensitive users
         if sensitivity == "sensitive":
 
             if (
@@ -771,14 +780,17 @@ def recommendations():
             ):
                 suitable_products.append(product)
 
+        # Somewhat sensitive users
         elif sensitivity == "somewhat_sensitive":
 
             if (
                 "sensitive" in product_sensitivity
                 or "somewhat_sensitive" in product_sensitivity
+                or "not_sensitive" in product_sensitivity
             ):
                 suitable_products.append(product)
 
+        # Non-sensitive users
         else:
 
             suitable_products.append(product)
@@ -789,8 +801,8 @@ def recommendations():
 
     categories = [
         "Face Wash",
-        "Serum",
         "Toner",
+        "Serum",
         "Moisturizer",
         "Sunscreen"
     ]
@@ -802,23 +814,31 @@ def recommendations():
         category_products = [
             product
             for product in suitable_products
-            if product["category"].lower() == category.lower()
+            if product["category"].strip().lower() == category.lower()
         ]
 
-        # Sort by price
+        # Sort products by price
         category_products.sort(
             key=lambda product: product["price"]
         )
 
-        categorized_products[category] = category_products
+        # Only add categories that have products
+        if category_products:
+            categorized_products[category] = category_products
+
+    # --------------------------------
+    # Count recommendations
+    # --------------------------------
+
+    total_products = len(suitable_products)
 
     return render_template(
         "recommendations.html",
         categorized_products=categorized_products,
         skin_type=skin_type,
-        sensitivity=sensitivity
+        sensitivity=sensitivity,
+        total_products=total_products
     )
-
 @app.route("/logout")
 def logout():
     session.pop("user", None)
