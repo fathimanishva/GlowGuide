@@ -40,9 +40,19 @@
                 {{ skin_type|capitalize }} Skin
             </span>
 
+            {% if source == "questionnaire" %}
+
             <span class="badge bg-secondary fs-6">
                 {{ sensitivity.replace("_", " ")|capitalize }}
             </span>
+
+            {% elif source == "ai" %}
+
+            <span class="badge bg-success fs-6">
+                AI Image Analysis
+            </span>
+
+            {% endif %}
 
         </div>
 

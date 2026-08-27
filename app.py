@@ -354,6 +354,10 @@ def analyze_skin_route():
 
     skin_type = best_result["label"].lower()
 
+    # Store AI detected skin type for product recommendations
+    session["ai_skin_type"] = skin_type
+    session["recommendation_source"] = "ai"
+
     # Save AI analysis to history
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -538,6 +542,9 @@ def questionnaire():
         # Save questionnaire result in session
         session["questionnaire_skin_type"] = skin_type
         session["questionnaire_sensitivity"] = sensitivity
+        
+        # Mark questionnaire as the current recommendation source
+        session["recommendation_source"] = "questionnaire"
 
 
         # -----------------------------
@@ -730,21 +737,43 @@ def recommendations():
     if "user" not in session:
         return redirect("/login")
 
-    skin_type = session.get("questionnaire_skin_type")
-    sensitivity = session.get(
-        "questionnaire_sensitivity",
-        "not_sensitive"
-    )
+    # --------------------------------
+    # Check recommendation source
+    # --------------------------------
+
+    source = session.get("recommendation_source")
+
+    if source == "ai":
+
+        # Use skin type detected from image
+        skin_type = session.get("ai_skin_type")
+
+        # AI does not currently detect sensitivity
+        sensitivity = None
+
+    elif source == "questionnaire":
+
+        # Use questionnaire results
+        skin_type = session.get("questionnaire_skin_type")
+
+        sensitivity = session.get(
+            "questionnaire_sensitivity",
+            "not_sensitive"
+        )
+
+    else:
+        return redirect("/dashboard")
 
     if not skin_type:
         return redirect("/dashboard")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
     # --------------------------------
     # Get products matching skin type
     # --------------------------------
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT *
@@ -757,6 +786,7 @@ def recommendations():
 
     conn.close()
 
+
     # --------------------------------
     # Filter according to sensitivity
     # --------------------------------
@@ -765,14 +795,26 @@ def recommendations():
 
     for product in all_products:
 
-        # Convert database value into a clean list
         product_sensitivity = [
             value.strip().lower()
             for value in product["sensitivity"].split(",")
         ]
 
-        # Sensitive users
-        if sensitivity == "sensitive":
+        # ----------------------------
+        # AI image recommendation
+        # ----------------------------
+        # AI only detects skin type.
+        # Therefore, don't filter by sensitivity.
+
+        if source == "ai":
+
+            suitable_products.append(product)
+
+        # ----------------------------
+        # Questionnaire recommendation
+        # ----------------------------
+
+        elif sensitivity == "sensitive":
 
             if (
                 "sensitive" in product_sensitivity
@@ -780,20 +822,18 @@ def recommendations():
             ):
                 suitable_products.append(product)
 
-        # Somewhat sensitive users
         elif sensitivity == "somewhat_sensitive":
 
             if (
                 "sensitive" in product_sensitivity
                 or "somewhat_sensitive" in product_sensitivity
-                or "not_sensitive" in product_sensitivity
             ):
                 suitable_products.append(product)
 
-        # Non-sensitive users
         else:
 
             suitable_products.append(product)
+
 
     # --------------------------------
     # Organize products by category
@@ -814,7 +854,8 @@ def recommendations():
         category_products = [
             product
             for product in suitable_products
-            if product["category"].strip().lower() == category.lower()
+            if product["category"].strip().lower()
+            == category.lower()
         ]
 
         # Sort products by price
@@ -822,9 +863,10 @@ def recommendations():
             key=lambda product: product["price"]
         )
 
-        # Only add categories that have products
+        # Don't display empty categories
         if category_products:
             categorized_products[category] = category_products
+
 
     # --------------------------------
     # Count recommendations
@@ -832,13 +874,20 @@ def recommendations():
 
     total_products = len(suitable_products)
 
+
+    # --------------------------------
+    # Show recommendation page
+    # --------------------------------
+
     return render_template(
         "recommendations.html",
         categorized_products=categorized_products,
         skin_type=skin_type,
         sensitivity=sensitivity,
-        total_products=total_products
+        total_products=total_products,
+        source=source
     )
+    
 @app.route("/logout")
 def logout():
     session.pop("user", None)

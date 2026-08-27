@@ -97,13 +97,18 @@
         </ul>
 
 
-        <!-- Back Button -->
+        <!-- Product Recommendations and Back Button -->
 
         <div class="text-center mt-4">
 
+            <a href="{{ url_for('recommendations') }}"
+            class="btn btn-success me-2">
+            🧴 View Product Recommendations
+            </a>
+
             <a href="{{ url_for('dashboard') }}"
-               class="btn btn-primary">
-                ← Back to Dashboard
+            class="btn btn-primary">
+            ← Back to Dashboard
             </a>
 
         </div>
