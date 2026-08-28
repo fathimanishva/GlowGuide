@@ -16,12 +16,94 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-app.secret_key = "glowguide_secret_key"
-
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "glowguide_secret_key"
+)
 def get_db_connection():
     conn = sqlite3.connect("glowguide.db")
     conn.row_factory = sqlite3.Row
     return conn
+
+def get_suitable_products(skin_type, sensitivity=None, concerns=None, source="ai"):
+
+    if concerns is None:
+        concerns = []
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM products
+        WHERE ',' || LOWER(REPLACE(skin_types, ' ', '')) || ','
+        LIKE ?
+    """, (f"%,{skin_type.lower()},%",))
+
+    all_products = cursor.fetchall()
+
+    conn.close()
+
+    suitable_products = []
+
+    for product in all_products:
+
+        product_sensitivity = [
+            value.strip().lower()
+            for value in product["sensitivity"].split(",")
+        ]
+
+        # AI recommendation
+        if source == "ai":
+            suitable_products.append(product)
+
+        # Questionnaire recommendation
+        elif sensitivity == "sensitive":
+
+            if (
+                "sensitive" in product_sensitivity
+                or "somewhat_sensitive" in product_sensitivity
+            ):
+                suitable_products.append(product)
+
+        elif sensitivity == "somewhat_sensitive":
+
+            if (
+                "sensitive" in product_sensitivity
+                or "somewhat_sensitive" in product_sensitivity
+            ):
+                suitable_products.append(product)
+
+        else:
+            suitable_products.append(product)
+
+    # --------------------------------
+    # Concern score
+    # --------------------------------
+
+    scored_products = []
+
+    for product in suitable_products:
+
+        match_score = 0
+
+        if source == "questionnaire" and product["concerns"]:
+
+            product_concerns = [
+                value.strip().lower()
+                for value in product["concerns"].split(",")
+            ]
+
+            for concern in concerns:
+
+                if concern.lower() in product_concerns:
+                    match_score += 1
+
+        scored_products.append(
+            (product, match_score)
+        )
+
+    return scored_products
 
 def send_otp_email(receiver_email, otp):
 
@@ -89,11 +171,21 @@ def login():
 
         conn.close()
 
-        if user and check_password_hash(user["password"], password):
+        if user and check_password_hash(
+            user["password"],
+            password
+        ):
 
+            # Store user details in session
             session["user"] = user["fullname"]
             session["user_email"] = user["email"]
+            session["role"] = user["role"]
 
+            # Admin login
+            if user["role"] == "admin":
+                return redirect("/admin/dashboard")
+
+            # Normal user login
             return redirect("/dashboard")
 
         else:
@@ -287,6 +379,9 @@ def reset_password():
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
 
+    if "user" not in session:
+        return redirect("/login")
+
     image_name = session.get("image_name")
     success = None
 
@@ -431,6 +526,11 @@ def questionnaire():
         q6 = request.form.get("q6")
         q7 = request.form.get("q7")
 
+        # Skin concern answers
+        q8 = request.form.get("q8")
+        q9 = request.form.get("q9")
+        q10 = request.form.get("q10")
+
 
         # -----------------------------
         # Skin type scoring
@@ -474,6 +574,16 @@ def questionnaire():
             sensitivity_scores,
             key=sensitivity_scores.get
         )
+
+        # -----------------------------
+        # Skin concerns
+        # -----------------------------
+
+        concerns = []
+
+        for answer in [q8, q9, q10]:
+            if answer and answer not in concerns:
+                concerns.append(answer)
 
 
         # -----------------------------
@@ -542,6 +652,7 @@ def questionnaire():
         # Save questionnaire result in session
         session["questionnaire_skin_type"] = skin_type
         session["questionnaire_sensitivity"] = sensitivity
+        session["questionnaire_concerns"] = concerns
         
         # Mark questionnaire as the current recommendation source
         session["recommendation_source"] = "questionnaire"
@@ -686,6 +797,411 @@ def dashboard():
 
     return render_template("dashboard.html")
 
+@app.route("/admin/dashboard")
+def admin_dashboard():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Total registered users
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM users
+        WHERE role = 'user'
+    """)
+    total_users = cursor.fetchone()[0]
+
+    # Total products
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM products
+    """)
+    total_products = cursor.fetchone()[0]
+
+    # Total analyses
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM analysis_history
+    """)
+    total_analyses = cursor.fetchone()[0]
+
+    conn.close()
+
+    return render_template(
+        "admin_dashboard.html",
+        total_users=total_users,
+        total_products=total_products,
+        total_analyses=total_analyses
+    )
+
+@app.route("/admin/products")
+def admin_products():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM products
+        ORDER BY id DESC
+    """)
+
+    products = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin_products.html",
+        products=products
+    )
+
+@app.route("/admin/products/add", methods=["GET", "POST"])
+def admin_add_product():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    if request.method == "POST":
+
+        name = request.form["name"].strip()
+        brand = request.form["brand"].strip()
+        category = request.form["category"]
+        price = request.form["price"]
+
+        skin_types = request.form.getlist("skin_types")
+        sensitivity = request.form.getlist("sensitivity")
+        concerns = request.form.getlist("concerns")
+
+        description = request.form.get(
+            "description", ""
+        ).strip()
+
+        product_link = request.form.get(
+            "product_link", ""
+        ).strip()
+
+        # Convert checkbox lists to comma-separated strings
+        skin_types_string = ",".join(skin_types)
+        sensitivity_string = ",".join(sensitivity)
+        concerns_string = ",".join(concerns)
+
+
+        # ----------------------------
+        # Product image
+        # ----------------------------
+
+        image = request.files.get("image")
+
+        image_path = None
+
+        if image and image.filename:
+
+            filename = secure_filename(
+                image.filename
+            )
+
+            product_folder = os.path.join(
+                app.root_path,
+                "static",
+                "images",
+                "products"
+            )
+
+            os.makedirs(
+                product_folder,
+                exist_ok=True
+            )
+
+            image.save(
+                os.path.join(
+                    product_folder,
+                    filename
+                )
+            )
+
+            image_path = (
+                f"images/products/{filename}"
+            )
+
+
+        # ----------------------------
+        # Save product
+        # ----------------------------
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO products
+            (
+                name,
+                brand,
+                category,
+                price,
+                skin_types,
+                sensitivity,
+                concerns,
+                description,
+                image,
+                product_link
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            name,
+            brand,
+            category,
+            price,
+            skin_types_string,
+            sensitivity_string,
+            concerns_string,
+            description,
+            image_path,
+            product_link
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/admin/products")
+
+
+    return render_template(
+        "admin_add_product.html"
+    )
+
+@app.route("/admin/products/edit/<int:product_id>",
+           methods=["GET", "POST"])
+def admin_edit_product(product_id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get existing product
+    cursor.execute("""
+        SELECT *
+        FROM products
+        WHERE id = ?
+    """, (product_id,))
+
+    product = cursor.fetchone()
+
+    if not product:
+        conn.close()
+        return redirect("/admin/products")
+
+
+    # --------------------------------
+    # Update product
+    # --------------------------------
+
+    if request.method == "POST":
+
+        name = request.form["name"].strip()
+        brand = request.form["brand"].strip()
+        category = request.form["category"]
+        price = request.form["price"]
+
+        skin_types = request.form.getlist("skin_types")
+        sensitivity = request.form.getlist("sensitivity")
+        concerns = request.form.getlist("concerns")
+
+        description = request.form.get(
+            "description", ""
+        ).strip()
+
+        product_link = request.form.get(
+            "product_link", ""
+        ).strip()
+
+        skin_types_string = ",".join(skin_types)
+        sensitivity_string = ",".join(sensitivity)
+        concerns_string = ",".join(concerns)
+
+
+        # --------------------------------
+        # Keep existing image by default
+        # --------------------------------
+
+        image_path = product["image"]
+
+        new_image = request.files.get("image")
+
+        if new_image and new_image.filename:
+
+            filename = secure_filename(
+                new_image.filename
+            )
+
+            product_folder = os.path.join(
+                app.root_path,
+                "static",
+                "images",
+                "products"
+            )
+
+            os.makedirs(
+                product_folder,
+                exist_ok=True
+            )
+
+            new_image.save(
+                os.path.join(
+                    product_folder,
+                    filename
+                )
+            )
+
+            image_path = (
+                f"images/products/{filename}"
+            )
+
+
+        # --------------------------------
+        # Update database
+        # --------------------------------
+
+        cursor.execute("""
+            UPDATE products
+
+            SET
+                name = ?,
+                brand = ?,
+                category = ?,
+                price = ?,
+                skin_types = ?,
+                sensitivity = ?,
+                concerns = ?,
+                description = ?,
+                image = ?,
+                product_link = ?
+
+            WHERE id = ?
+        """, (
+            name,
+            brand,
+            category,
+            price,
+            skin_types_string,
+            sensitivity_string,
+            concerns_string,
+            description,
+            image_path,
+            product_link,
+            product_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/admin/products")
+
+
+    conn.close()
+
+    return render_template(
+        "admin_edit_product.html",
+        product=product
+    )
+
+@app.route("/admin/products/delete/<int:product_id>",
+           methods=["POST"])
+def admin_delete_product(product_id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM products
+        WHERE id = ?
+    """, (product_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin/products")
+
+@app.route("/admin/users")
+def admin_users():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM users
+        WHERE role = 'user'
+        ORDER BY id DESC
+    """)
+
+    users = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin_users.html",
+        users=users
+    )
+
+@app.route("/admin/analyses")
+def admin_analyses():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM analysis_history
+        ORDER BY analysis_date DESC
+    """)
+
+    analyses = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin_analyses.html",
+        analyses=analyses
+    )
+
 @app.route("/profile")
 def profile():
 
@@ -745,94 +1261,47 @@ def recommendations():
 
     if source == "ai":
 
-        # Use skin type detected from image
+        # AI analysis provides skin type only
         skin_type = session.get("ai_skin_type")
-
-        # AI does not currently detect sensitivity
         sensitivity = None
+        concerns = []
 
     elif source == "questionnaire":
 
-        # Use questionnaire results
-        skin_type = session.get("questionnaire_skin_type")
+        # Questionnaire provides skin type,
+        # sensitivity and concerns
+        skin_type = session.get(
+            "questionnaire_skin_type"
+        )
 
         sensitivity = session.get(
             "questionnaire_sensitivity",
             "not_sensitive"
         )
 
+        concerns = session.get(
+            "questionnaire_concerns",
+            []
+        )
+
     else:
         return redirect("/dashboard")
+
 
     if not skin_type:
         return redirect("/dashboard")
 
 
     # --------------------------------
-    # Get products matching skin type
+    # Get suitable products
     # --------------------------------
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT *
-        FROM products
-        WHERE ',' || LOWER(REPLACE(skin_types, ' ', '')) || ','
-        LIKE ?
-    """, (f"%,{skin_type.lower()},%",))
-
-    all_products = cursor.fetchall()
-
-    conn.close()
-
-
-    # --------------------------------
-    # Filter according to sensitivity
-    # --------------------------------
-
-    suitable_products = []
-
-    for product in all_products:
-
-        product_sensitivity = [
-            value.strip().lower()
-            for value in product["sensitivity"].split(",")
-        ]
-
-        # ----------------------------
-        # AI image recommendation
-        # ----------------------------
-        # AI only detects skin type.
-        # Therefore, don't filter by sensitivity.
-
-        if source == "ai":
-
-            suitable_products.append(product)
-
-        # ----------------------------
-        # Questionnaire recommendation
-        # ----------------------------
-
-        elif sensitivity == "sensitive":
-
-            if (
-                "sensitive" in product_sensitivity
-                or "somewhat_sensitive" in product_sensitivity
-            ):
-                suitable_products.append(product)
-
-        elif sensitivity == "somewhat_sensitive":
-
-            if (
-                "sensitive" in product_sensitivity
-                or "somewhat_sensitive" in product_sensitivity
-            ):
-                suitable_products.append(product)
-
-        else:
-
-            suitable_products.append(product)
+    scored_products = get_suitable_products(
+        skin_type,
+        sensitivity,
+        concerns,
+        source
+    )
 
 
     # --------------------------------
@@ -849,30 +1318,115 @@ def recommendations():
 
     categorized_products = {}
 
+
     for category in categories:
 
         category_products = [
-            product
-            for product in suitable_products
+            (product, score)
+            for product, score in scored_products
             if product["category"].strip().lower()
             == category.lower()
         ]
 
-        # Sort products by price
+
+        # Questionnaire:
+        # Higher concern match first,
+        # then lower price.
+        #
+        # AI:
+        # Scores are 0,
+        # so products are sorted by price.
+
         category_products.sort(
-            key=lambda product: product["price"]
+            key=lambda item: (
+                -item[1],
+                item[0]["price"]
+            )
         )
 
-        # Don't display empty categories
+
+        # Remove match score before
+        # sending products to template
+
+        category_products = [
+            product
+            for product, score in category_products
+        ]
+
+
         if category_products:
-            categorized_products[category] = category_products
+            categorized_products[category] = (
+                category_products
+            )
 
 
     # --------------------------------
     # Count recommendations
     # --------------------------------
 
-    total_products = len(suitable_products)
+    total_products = len(scored_products)
+
+
+    # --------------------------------
+    # Save latest recommendations
+    # --------------------------------
+
+    # Save products in the same category/ranked
+    # order shown on the recommendation page
+
+    product_ids = []
+
+    for category in categories:
+
+        for product in categorized_products.get(
+            category,
+            []
+        ):
+            product_ids.append(
+                str(product["id"])
+            )
+
+
+    product_ids_string = ",".join(product_ids)
+    concerns_string = ",".join(concerns)
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    # Keep only latest saved recommendation
+    cursor.execute("""
+        DELETE FROM saved_recommendations
+        WHERE user_email = ?
+    """, (
+        session["user_email"],
+    ))
+
+
+    cursor.execute("""
+        INSERT INTO saved_recommendations
+        (
+            user_email,
+            source,
+            skin_type,
+            sensitivity,
+            concerns,
+            product_ids
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        session["user_email"],
+        source,
+        skin_type,
+        sensitivity,
+        concerns_string,
+        product_ids_string
+    ))
+
+
+    conn.commit()
+    conn.close()
 
 
     # --------------------------------
@@ -884,13 +1438,511 @@ def recommendations():
         categorized_products=categorized_products,
         skin_type=skin_type,
         sensitivity=sensitivity,
+        concerns=concerns,
         total_products=total_products,
         source=source
+    )
+
+@app.route("/saved-recommendations")
+def saved_recommendations():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM saved_recommendations
+        WHERE user_email = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (
+        session["user_email"],
+    ))
+
+    saved = cursor.fetchone()
+
+    if not saved:
+        conn.close()
+        return redirect("/dashboard")
+
+    product_ids = []
+
+    if saved["product_ids"]:
+        product_ids = [
+            int(product_id)
+            for product_id in saved["product_ids"].split(",")
+        ]
+
+    products = []
+
+    if product_ids:
+
+        placeholders = ",".join(
+            ["?"] * len(product_ids)
+        )
+
+        cursor.execute(
+            f"""
+            SELECT *
+            FROM products
+            WHERE id IN ({placeholders})
+            """,
+            product_ids
+        )
+
+        products = cursor.fetchall()
+
+    conn.close()
+
+
+    # Organize products by category
+
+    categories = [
+        "Face Wash",
+        "Toner",
+        "Serum",
+        "Moisturizer",
+        "Sunscreen"
+    ]
+
+    categorized_products = {}
+
+    for category in categories:
+
+        category_products = [
+            product
+            for product in products
+            if product["category"].strip().lower()
+            == category.lower()
+        ]
+
+        if category_products:
+            categorized_products[category] = (
+                category_products
+            )
+
+
+    return render_template(
+        "saved_recommendations.html",
+        categorized_products=categorized_products,
+        skin_type=saved["skin_type"],
+        sensitivity=saved["sensitivity"],
+        source=saved["source"]
+    )
+
+@app.route("/routine")
+def routine():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    source = session.get("recommendation_source")
+
+    if source == "ai":
+
+        skin_type = session.get("ai_skin_type")
+        sensitivity = None
+        concerns = []
+
+    elif source == "questionnaire":
+
+        skin_type = session.get("questionnaire_skin_type")
+
+        sensitivity = session.get(
+            "questionnaire_sensitivity",
+            "not_sensitive"
+        )
+
+        concerns = session.get(
+            "questionnaire_concerns",
+            []
+        )
+
+    else:
+        return redirect("/dashboard")
+
+    if not skin_type:
+        return redirect("/dashboard")
+
+
+    # Get suitable products
+    scored_products = get_suitable_products(
+        skin_type,
+        sensitivity,
+        concerns,
+        source
+    )
+
+
+    # Sort by concern match first,
+    # then by lower price
+    scored_products.sort(
+        key=lambda item: (
+            -item[1],
+            item[0]["price"]
+        )
+    )
+
+
+    # --------------------------------
+    # Select one product per category
+    # --------------------------------
+
+    selected_products = {}
+
+    categories = [
+        "Face Wash",
+        "Toner",
+        "Serum",
+        "Moisturizer",
+        "Sunscreen"
+    ]
+
+    for category in categories:
+
+        for product, score in scored_products:
+
+            if (
+                product["category"].strip().lower()
+                == category.lower()
+            ):
+
+                selected_products[category] = product
+                break
+
+
+    # --------------------------------
+    # Morning routine
+    # --------------------------------
+
+    morning_routine = [
+        {
+            "step": 1,
+            "category": "Face Wash",
+            "product": selected_products.get("Face Wash"),
+            "instruction":
+                "Use first to gently cleanse your face, then rinse."
+        },
+        {
+            "step": 2,
+            "category": "Toner",
+            "product": selected_products.get("Toner"),
+            "instruction":
+                "Apply after cleansing."
+        },
+        {
+            "step": 3,
+            "category": "Serum",
+            "product": selected_products.get("Serum"),
+            "instruction":
+                "Apply after toner and allow it to absorb."
+        },
+        {
+            "step": 4,
+            "category": "Moisturizer",
+            "product": selected_products.get("Moisturizer"),
+            "instruction":
+                "Apply after serum to keep your skin moisturized."
+        },
+        {
+            "step": 5,
+            "category": "Sunscreen",
+            "product": selected_products.get("Sunscreen"),
+            "instruction":
+                "Use as the final step of your morning routine."
+        }
+    ]
+
+
+    # --------------------------------
+    # Night routine
+    # --------------------------------
+
+    night_routine = [
+        {
+            "step": 1,
+            "category": "Face Wash",
+            "product": selected_products.get("Face Wash"),
+            "instruction":
+                "Cleanse your face gently and rinse."
+        },
+        {
+            "step": 2,
+            "category": "Toner",
+            "product": selected_products.get("Toner"),
+            "instruction":
+                "Apply after cleansing."
+        },
+        {
+            "step": 3,
+            "category": "Serum",
+            "product": selected_products.get("Serum"),
+            "instruction":
+                "Apply after toner and allow it to absorb."
+        },
+        {
+            "step": 4,
+            "category": "Moisturizer",
+            "product": selected_products.get("Moisturizer"),
+            "instruction":
+                "Use as the final step of your night routine."
+        }
+    ]
+
+    # --------------------------------
+    # Save latest routine
+    # --------------------------------
+
+    morning_product_ids = [
+        str(item["product"]["id"])
+        for item in morning_routine
+        if item["product"]
+    ]
+
+    night_product_ids = [
+        str(item["product"]["id"])
+        for item in night_routine
+        if item["product"]
+    ]
+
+    morning_ids_string = ",".join(morning_product_ids)
+    night_ids_string = ",".join(night_product_ids)
+    concerns_string = ",".join(concerns)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Keep only the latest saved routine
+    cursor.execute("""
+        DELETE FROM saved_routines
+        WHERE user_email = ?
+    """, (
+        session["user_email"],
+    ))
+
+    cursor.execute("""
+        INSERT INTO saved_routines
+        (
+            user_email,
+            source,
+            skin_type,
+            sensitivity,
+            concerns,
+            morning_product_ids,
+            night_product_ids
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        session["user_email"],
+        source,
+        skin_type,
+        sensitivity,
+        concerns_string,
+        morning_ids_string,
+        night_ids_string
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+    return render_template(
+        "routine.html",
+        skin_type=skin_type,
+        sensitivity=sensitivity,
+        source=source,
+        morning_routine=morning_routine,
+        night_routine=night_routine
+    )
+
+@app.route("/saved-routine")
+def saved_routine():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get latest saved routine
+    cursor.execute("""
+        SELECT *
+        FROM saved_routines
+        WHERE user_email = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (
+        session["user_email"],
+    ))
+
+    saved = cursor.fetchone()
+
+    if not saved:
+        conn.close()
+        return redirect("/dashboard")
+
+
+    # --------------------------------
+    # Convert stored IDs into lists
+    # --------------------------------
+
+    morning_ids = []
+
+    if saved["morning_product_ids"]:
+        morning_ids = [
+            int(product_id)
+            for product_id
+            in saved["morning_product_ids"].split(",")
+        ]
+
+    night_ids = []
+
+    if saved["night_product_ids"]:
+        night_ids = [
+            int(product_id)
+            for product_id
+            in saved["night_product_ids"].split(",")
+        ]
+
+
+    # --------------------------------
+    # Function to get products
+    # in the same saved order
+    # --------------------------------
+
+    def get_products_by_ids(product_ids):
+
+        if not product_ids:
+            return []
+
+        placeholders = ",".join(
+            ["?"] * len(product_ids)
+        )
+
+        cursor.execute(
+            f"""
+            SELECT *
+            FROM products
+            WHERE id IN ({placeholders})
+            """,
+            product_ids
+        )
+
+        products = cursor.fetchall()
+
+        product_map = {
+            product["id"]: product
+            for product in products
+        }
+
+        return [
+            product_map[product_id]
+            for product_id in product_ids
+            if product_id in product_map
+        ]
+
+
+    morning_products = get_products_by_ids(
+        morning_ids
+    )
+
+    night_products = get_products_by_ids(
+        night_ids
+    )
+
+    conn.close()
+
+
+    # --------------------------------
+    # Instructions
+    # --------------------------------
+
+    instructions = {
+        "Face Wash":
+            "Use first to gently cleanse your face, then rinse.",
+
+        "Toner":
+            "Apply after cleansing.",
+
+        "Serum":
+            "Apply after toner and allow it to absorb.",
+
+        "Moisturizer":
+            "Apply after serum to keep your skin moisturized.",
+
+        "Sunscreen":
+            "Use as the final step of your morning routine."
+    }
+
+
+    # --------------------------------
+    # Build morning routine
+    # --------------------------------
+
+    morning_routine = []
+
+    for step, product in enumerate(
+        morning_products,
+        start=1
+    ):
+
+        morning_routine.append({
+            "step": step,
+            "category": product["category"],
+            "product": product,
+            "instruction": instructions.get(
+                product["category"],
+                "Use as directed."
+            )
+        })
+
+
+    # --------------------------------
+    # Build night routine
+    # --------------------------------
+
+    night_routine = []
+
+    for step, product in enumerate(
+        night_products,
+        start=1
+    ):
+
+        instruction = instructions.get(
+            product["category"],
+            "Use as directed."
+        )
+
+        if product["category"] == "Moisturizer":
+            instruction = (
+                "Use as the final step of your night routine."
+            )
+
+        night_routine.append({
+            "step": step,
+            "category": product["category"],
+            "product": product,
+            "instruction": instruction
+        })
+
+
+    return render_template(
+        "saved_routine.html",
+        skin_type=saved["skin_type"],
+        sensitivity=saved["sensitivity"],
+        source=saved["source"],
+        morning_routine=morning_routine,
+        night_routine=night_routine
     )
     
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+
+    session.clear()
+
     return redirect("/")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -923,7 +1975,7 @@ def register():
         conn.commit()
         conn.close()
 
-        return "Registration Successful!"
+        return redirect("/login")
 
     return render_template("register.html")     
 

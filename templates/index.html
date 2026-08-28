@@ -10,85 +10,268 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
 
 <body>
 
     <!-- Navigation Bar -->
-     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-    <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
 
-        <a class="navbar-brand fw-bold text-primary" href="#">
-            🌸 GlowGuide
-        </a>
+            <a class="navbar-brand fw-bold text-primary" href="#home">
+                🌸 GlowGuide
+            </a>
 
-        <button class="navbar-toggler" type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav">
 
-            <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
 
-        </button>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse" id="navbarNav">
 
-            <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto">
 
-                <li class="nav-item">
-                    <a class="nav-link active" href="#">Home</a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home">
+                            Home
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Features</a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">
+                            Features
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">
+                            About
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                   <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('login') }}"
+                           class="btn btn-primary">
+                            Login
+                        </a>
+                    </li>
 
-            </ul>
+                </ul>
+
+            </div>
 
         </div>
-
-    </div>
-</nav>
-
+    </nav>
 
 
     <!-- Hero Section -->
-<section class="hero-section">
-    <div class="row align-items-center">
+    <section class="hero-section" id="home">
 
-        <div class="col-lg-6">
-            <h1 class="display-3 hero-title">
-                AI-Powered Personalized Skincare Guidance
-            </h1>
+        <div class="row align-items-center">
 
-            <p class="lead mt-3">
-                Discover skincare recommendations tailored to your skin type using artificial intelligence.
-            </p>
+            <div class="col-lg-6">
 
-            <a href="#" class="btn btn-primary btn-lg mt-3">
-                Get Started
-            </a>
+                <h1 class="display-3 hero-title">
+                    AI-Powered Personalized Skincare Guidance
+                </h1>
 
-            <a href="#" class="btn btn-outline-secondary btn-lg mt-3 ms-2">
-                Learn More
-            </a>
+                <p class="lead mt-3">
+                    Discover skincare recommendations tailored to your skin type using artificial intelligence.
+                </p>
+
+                <a href="{{ url_for('login') }}"
+                   class="btn btn-primary btn-lg mt-3">
+                    Get Started
+                </a>
+
+                <a href="#about"
+                   class="btn btn-outline-secondary btn-lg mt-3 ms-2">
+                    Learn More
+                </a>
+
+            </div>
+
+            <div class="col-lg-6 text-center">
+
+                <img
+                    src="{{ url_for('static', filename='images/hero.png') }}"
+                    alt="GlowGuide AI Skincare"
+                    class="img-fluid">
+
+            </div>
+
         </div>
 
-        <div class="col-lg-6 text-center">
-            <img src="{{ url_for('static', filename='images/hero.png') }}"
-     alt="GlowGuide AI Skincare"
-     class="img-fluid">
+    </section>
+
+
+    <!-- Features Section -->
+<section id="features" class="container py-5">
+
+    <div class="text-center mb-5">
+
+        <h2 class="fw-bold">
+            GlowGuide Features
+        </h2>
+
+        <p class="text-muted">
+            Multiple ways to understand your skin and receive
+            personalized skincare guidance.
+        </p>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- AI Skin Analysis -->
+        <div class="col-md-6 col-lg-3">
+
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+
+                <div class="fs-1 mb-3">
+                    🤖
+                </div>
+
+                <h4>
+                    AI Skin Analysis
+                </h4>
+
+                <p class="text-muted">
+                    Upload a skin image and let GlowGuide analyze
+                    your skin type using artificial intelligence.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Skin Questionnaire -->
+        <div class="col-md-6 col-lg-3">
+
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+
+                <div class="fs-1 mb-3">
+                    📋
+                </div>
+
+                <h4>
+                    Skin Questionnaire
+                </h4>
+
+                <p class="text-muted">
+                    Answer simple questions about your skin to
+                    identify your skin type, sensitivity and
+                    skincare concerns.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Product Recommendations -->
+        <div class="col-md-6 col-lg-3">
+
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+
+                <div class="fs-1 mb-3">
+                    🧴
+                </div>
+
+                <h4>
+                    Product Recommendations
+                </h4>
+
+                <p class="text-muted">
+                    Receive suitable skincare product recommendations
+                    based on your skin analysis.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Personalized Routine -->
+        <div class="col-md-6 col-lg-3">
+
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+
+                <div class="fs-1 mb-3">
+                    ✨
+                </div>
+
+                <h4>
+                    Personalized Routine
+                </h4>
+
+                <p class="text-muted">
+                    Follow structured morning and night routines
+                    with guidance on product order and usage.
+                </p>
+
+            </div>
+
         </div>
 
     </div>
+
 </section>
+
+
+    <!-- About Section -->
+    <section id="about" class="py-5 bg-light">
+
+        <div class="container text-center">
+
+            <h2 class="fw-bold mb-3">
+                About GlowGuide
+            </h2>
+
+            <p class="lead text-muted mx-auto"
+               style="max-width: 800px;">
+
+                GlowGuide is an AI-powered skincare guidance system
+                designed to help users understand their skin type and
+                receive personalized skincare recommendations.
+
+                Users can analyze their skin through image analysis
+                or a questionnaire and receive suitable products and
+                structured morning and night skincare routines.
+
+            </p>
+
+            <a href="{{ url_for('login') }}"
+               class="btn btn-primary mt-3">
+
+                Start Using GlowGuide
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="bg-white text-center py-4 border-top">
+
+        <p class="mb-0 text-muted">
+            © 2026 GlowGuide
+        </p>
+
+    </footer>
 
 
     <!-- Bootstrap JS -->

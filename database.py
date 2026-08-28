@@ -58,6 +58,59 @@ except sqlite3.OperationalError:
 
     print("Concerns column already exists.")
 
+# --------------------------------
+# Add role column to users
+# --------------------------------
+
+try:
+    cursor.execute("""
+        ALTER TABLE users
+        ADD COLUMN role TEXT DEFAULT 'user'
+    """)
+
+    print("Role column added.")
+
+except sqlite3.OperationalError:
+    print("Role column already exists.")
+
+
+
+# --------------------------------
+# Saved recommendations
+# --------------------------------
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS saved_recommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    source TEXT NOT NULL,
+    skin_type TEXT NOT NULL,
+    sensitivity TEXT,
+    concerns TEXT,
+    product_ids TEXT
+)
+""")
+
+
+# --------------------------------
+# Saved routines
+# --------------------------------
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS saved_routines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    source TEXT NOT NULL,
+    skin_type TEXT NOT NULL,
+    sensitivity TEXT,
+    concerns TEXT,
+    morning_product_ids TEXT,
+    night_product_ids TEXT
+)
+""")
+
 
 # --------------------------------
 # Save database changes
@@ -67,6 +120,5 @@ conn.commit()
 
 print("Analysis history table is ready.")
 print("Products table is ready.")
-
 
 conn.close()

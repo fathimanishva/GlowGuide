@@ -89,13 +89,16 @@
 
     </div>
 
-        <div class="mt-4">
+        <div class="d-flex justify-content-center gap-3 mt-4">
 
             <a href="{{ url_for('dashboard') }}"
-               class="btn btn-primary px-5">
+            class="btn btn-outline-primary">
+                ← Back to Dashboard
+            </a>
 
-                Back to Dashboard
-
+            <a href="{{ url_for('recommendations') }}"
+            class="btn btn-primary">
+                🌸 View Product Recommendations
             </a>
 
         </div>
