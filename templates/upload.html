@@ -149,13 +149,193 @@
 
     </button>
 
+
 {% endif %}
 
 </form>
 
+
+<!-- ============================= -->
+<!-- CAMERA CAPTURE SECTION -->
+<!-- ============================= -->
+
+<hr class="my-5">
+
+<div class="text-center">
+
+    <h4 class="fw-bold mb-3">
+        <i class="bi bi-camera-fill me-2"></i>
+        Or Take a Photo
+    </h4>
+
+    <p class="text-muted">
+        Use your device camera to capture a clear photo for skin analysis.
+    </p>
+
+    <div class="mt-4">
+
+        <video id="video"
+               autoplay
+               playsinline
+               style="
+                   width: 100%;
+                   max-width: 500px;
+                   height: 380px;
+                   object-fit: cover;
+                   border-radius: 15px;
+                   display: none;
+               ">
+        </video>
+
+    </div>
+
+    <div class="mt-3">
+
+        <button type="button"
+                id="startCamera"
+                class="btn btn-outline-primary px-4">
+
+            <i class="bi bi-camera-video-fill me-2"></i>
+            Open Camera
+
+        </button>
+
+        <button type="button"
+                id="capturePhoto"
+                class="btn btn-success px-4 ms-2"
+                style="display:none;">
+
+            <i class="bi bi-camera-fill me-2"></i>
+            Capture Photo
+
+        </button>
+
+    </div>
+
+    <canvas id="canvas"
+            style="display:none;">
+    </canvas>
+
+    <div class="mt-4">
+
+        <img id="capturedImage"
+             style="
+                 width: 100%;
+                 max-width: 500px;
+                 border-radius: 15px;
+                 display: none;
+             "
+             alt="Captured Photo">
+
+    </div>
+
+    <form method="POST"
+          action="/capture-photo"
+          class="mt-3">
+
+        <input type="hidden"
+               name="image_data"
+               id="imageData">
+
+        <button type="submit"
+                id="usePhoto"
+                class="btn btn-primary btn-lg px-5"
+                style="display:none;">
+
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Use This Photo
+
+        </button>
+
+    </form>
+
+</div>
+
+
+
     </div>
 
 </div>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+
+const startCamera = document.getElementById("startCamera");
+const capturePhoto = document.getElementById("capturePhoto");
+
+const capturedImage = document.getElementById("capturedImage");
+const imageData = document.getElementById("imageData");
+const usePhoto = document.getElementById("usePhoto");
+
+let stream = null;
+
+startCamera.addEventListener("click", async function () {
+
+    try {
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: true
+        });
+
+        video.srcObject = stream;
+
+        video.style.display = "block";
+        capturePhoto.style.display = "inline-block";
+        startCamera.style.display = "none";
+
+    } catch (error) {
+
+        console.error("Camera error:", error);
+
+        alert(
+            "Camera error: " +
+            error.name +
+            " - " +
+            error.message
+        );
+    }
+});
+
+
+capturePhoto.addEventListener("click", function () {
+
+    if (!stream) {
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    const photo = canvas.toDataURL("image/jpeg");
+
+    capturedImage.src = photo;
+    capturedImage.style.display = "block";
+
+    imageData.value = photo;
+
+    usePhoto.style.display = "inline-block";
+
+    stream.getTracks().forEach(track => track.stop());
+
+    video.style.display = "none";
+    capturePhoto.style.display = "none";
+
+    startCamera.style.display = "inline-block";
+    startCamera.innerHTML =
+        '<i class="bi bi-arrow-clockwise me-2"></i>Retake Photo';
+});
+</script>
 
 </body>
 </html>

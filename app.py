@@ -7,6 +7,7 @@ from ai.skin_analyzer import analyze_skin
 from dotenv import load_dotenv
 import smtplib
 import secrets
+import base64
 load_dotenv()
 
 app = Flask(__name__)
@@ -408,6 +409,42 @@ def upload():
         image_name=image_name,
         success=success
     )
+
+@app.route("/capture-photo", methods=["POST"])
+def capture_photo():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    image_data = request.form.get("image_data")
+
+    if not image_data:
+        return redirect("/upload")
+
+    try:
+        header, encoded = image_data.split(",", 1)
+
+        image_bytes = base64.b64decode(encoded)
+
+        filename = f"camera_{secrets.token_hex(8)}.jpg"
+
+        image_path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
+
+        with open(image_path, "wb") as image_file:
+            image_file.write(image_bytes)
+
+        session["image_name"] = filename
+
+        return redirect("/analysis")
+
+    except Exception as error:
+
+        print("Camera image error:", error)
+
+        return redirect("/upload")
 
 @app.route("/analysis")
 def analysis():
