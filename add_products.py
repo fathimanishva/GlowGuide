@@ -59,6 +59,44 @@ products = [
         None,
         "https://www.simple.co.uk/"
     ),
+    (
+    "2% Sali-Cinamide Anti-Acne Face Wash",
+    "The Derma Co",
+    "Face Wash",
+    349,
+    "oily,combination,normal",
+    "not_sensitive,somewhat_sensitive",
+    "oil_control,pores",
+    "Salicylic acid and niacinamide cleanser designed to control excess oil and unclog pores.",
+    None,
+    "https://thedermaco.com/"
+    ),
+
+    (
+        "2% Niacinamide Gentle Dry Skin Cleanser",
+        "The Derma Co",
+        "Face Wash",
+        299,
+        "dry,normal,sensitive",
+        "sensitive,somewhat_sensitive",
+        "dryness,dehydration,sensitivity",
+        "Gentle cleanser designed for dry skin with a hydration-focused formula.",
+        None,
+        "https://thedermaco.com/"
+    ),
+
+    (
+        "Watermelon SuperGlow Facial Gel Cleanser",
+        "Dot & Key",
+        "Face Wash",
+        295,
+        "oily,combination,normal",
+        "normal,somewhat_sensitive",
+        "oil_control,dullness",
+        "Lightweight cleanser that helps remove excess oil without over-drying the skin.",
+        None,
+        "https://www.dotandkey.com/"
+    ),
 
     # -------------------------
     # MOISTURIZER
@@ -114,6 +152,44 @@ products = [
         "Lightweight moisturizer for oily and combination skin.",
         None,
         "https://plumgoodness.com/"
+    ),
+    (
+    "5% Nia-Ceramide Daily Hydrating Moisturizer",
+    "The Derma Co",
+    "Moisturizer",
+    399,
+    "dry,normal,oily,combination",
+    "normal,somewhat_sensitive",
+    "dryness,dehydration",
+    "Hydrating moisturizer containing niacinamide and ceramides to support the skin barrier.",
+    None,
+    "https://thedermaco.com/"
+    ),
+
+    (
+        "Ceramide + HA Intense Daily Face Moisturizer",
+        "The Derma Co",
+        "Moisturizer",
+        349,
+        "dry,normal,sensitive",
+        "sensitive,somewhat_sensitive",
+        "dryness,dehydration,sensitivity",
+        "Ceramide and hyaluronic acid moisturizer designed for dry and dehydrated skin.",
+        None,
+        "https://thedermaco.com/"
+    ),
+
+    (
+        "Watermelon Cooling Icy Gel Moisturizer",
+        "Dot & Key",
+        "Moisturizer",
+        495,
+        "oily,combination,normal",
+        "normal,somewhat_sensitive",
+        "oil_control,dehydration",
+        "Lightweight gel moisturizer that provides hydration without a heavy feel.",
+        None,
+        "https://www.dotandkey.com/"
     ),
 
     # -------------------------
@@ -171,6 +247,32 @@ products = [
         None,
         "https://plumgoodness.com/"
     ),
+    (
+    "1% Hyaluronic Sunscreen Aqua Gel SPF 50",
+    "The Derma Co",
+    "Sunscreen",
+    499,
+    "dry,normal,oily,combination",
+    "normal,somewhat_sensitive",
+    "sun_protection,dehydration",
+    "Lightweight SPF 50 sunscreen with hyaluronic acid for daily sun protection.",
+    None,
+    "https://thedermaco.com/"
+    ),
+
+    (
+        "Watermelon Cooling Sunscreen SPF 50+",
+        "Dot & Key",
+        "Sunscreen",
+        495,
+        "oily,combination,normal",
+        "normal,somewhat_sensitive",
+        "sun_protection,oil_control",
+        "Lightweight sunscreen designed for oily, combination and normal skin.",
+        None,
+        "https://www.dotandkey.com/"
+    ),
+    
 
     # -------------------------
     # SERUM
@@ -240,6 +342,57 @@ products = [
         None,
         "https://www.dotandkey.com/"
     ),
+    (
+    "10% Vitamin C Face Serum",
+    "The Derma Co",
+    "Serum",
+    599,
+    "normal,dry,combination,oily",
+    "normal,somewhat_sensitive",
+    "dullness",
+    "Vitamin C serum designed to improve dull-looking and uneven skin.",
+    None,
+    "https://thedermaco.com/"
+    ),
+
+    (
+        "15% Vitamin C Face Serum",
+        "The Derma Co",
+        "Serum",
+        649,
+        "normal,dry,combination,oily",
+        "not_sensitive,somewhat_sensitive",
+        "dullness",
+        "Brightening serum formulated with vitamin C and supporting hydrating ingredients.",
+        None,
+        "https://thedermaco.com/"
+    ),
+
+    (
+        "2% Salicylic Acid Face Serum",
+        "The Derma Co",
+        "Serum",
+        499,
+        "oily,combination",
+        "not_sensitive,somewhat_sensitive",
+        "oil_control,pores",
+        "Salicylic acid serum designed to help unclog pores and manage excess oil.",
+        None,
+        "https://thedermaco.com/"
+    ),
+
+    (
+        "10% Glycolic Acid Face Serum",
+        "Dot & Key",
+        "Serum",
+        599,
+        "oily,combination,normal",
+        "not_sensitive",
+        "texture,dullness,pores",
+        "Exfoliating serum designed to improve skin texture and dullness.",
+        None,
+        "https://www.dotandkey.com/"
+    ),
 
     # -------------------------
     # TONER
@@ -282,6 +435,31 @@ products = [
         "Lightweight toner for oily and combination skin.",
         None,
         "https://plumgoodness.com/"
+    ),
+    (
+    "Rice Water Probiotics Toner",
+    "Dot & Key",
+    "Toner",
+    395,
+    "dry,normal,combination,sensitive",
+    "sensitive,somewhat_sensitive",
+    "dryness,dehydration,dullness",
+    "Hydrating toner designed to support smoother and more hydrated skin.",
+    None,
+    "https://www.dotandkey.com/"
+    ),
+
+    (
+        "Watermelon SuperGlow Pore Tightening Toner",
+        "Dot & Key",
+        "Toner",
+        395,
+        "oily,combination,normal",
+        "normal,somewhat_sensitive",
+        "oil_control,pores",
+        "Lightweight toner aimed at controlling excess oil and improving the appearance of pores.",
+        None,
+        "https://www.dotandkey.com/"
     )
 ]
 
@@ -326,5 +504,9 @@ for product in products:
 conn.commit()
 
 print(f"{added} new products added successfully!")
+cursor.execute("SELECT COUNT(*) FROM products")
+total = cursor.fetchone()[0]
+
+print("Total products in database:", total)
 
 conn.close()
