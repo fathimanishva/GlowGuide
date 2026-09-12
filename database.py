@@ -116,9 +116,63 @@ CREATE TABLE IF NOT EXISTS saved_routines (
 # Save database changes
 # --------------------------------
 
+# Add recommended_by column to products table
+try:
+    cursor.execute("""
+        ALTER TABLE products
+        ADD COLUMN recommended_by TEXT
+    """)
+    print("recommended_by column added.")
+except sqlite3.OperationalError:
+    print("recommended_by column already exists.")
+
+
+# Add reference column to products table
+try:
+    cursor.execute("""
+        ALTER TABLE products
+        ADD COLUMN reference TEXT
+    """)
+    print("reference column added.")
+except sqlite3.OperationalError:
+    print("reference column already exists.")
+
+
+# Create product reviews table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS product_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    user_email TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+    review_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+)
+""")
+
+# Create product recommendations table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS product_recommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    recommender_name TEXT NOT NULL,
+    recommender_title TEXT,
+    recommendation_reason TEXT,
+    reference_title TEXT,
+    reference_url TEXT,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+)
+""")
+
+print("Product recommendations table is ready.")
+
+
+
 conn.commit()
 
 print("Analysis history table is ready.")
 print("Products table is ready.")
+print("Product reviews table is ready.")
 
 conn.close()

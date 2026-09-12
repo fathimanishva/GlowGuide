@@ -1974,6 +1974,96 @@ def saved_routine():
         morning_routine=morning_routine,
         night_routine=night_routine
     )
+
+@app.route("/product-reviews")
+def product_reviews():
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+
+    products = conn.execute("""
+        SELECT *
+        FROM products
+        ORDER BY category, brand, name
+    """).fetchall()
+
+    reviews = conn.execute("""
+        SELECT
+            product_reviews.id,
+            product_reviews.product_id,
+            product_reviews.rating,
+            product_reviews.review_text,
+            product_reviews.created_at,
+            users.fullname
+        FROM product_reviews
+        LEFT JOIN users
+            ON product_reviews.user_email = users.email
+        ORDER BY product_reviews.created_at DESC
+    """).fetchall()
+
+    recommendations = conn.execute("""
+        SELECT *
+        FROM product_recommendations
+        ORDER BY id ASC
+    """).fetchall()
+
+    conn.close()
+
+    return render_template(
+        "product_reviews.html",
+        products=products,
+        reviews=reviews,
+        recommendations=recommendations
+    )
+
+@app.route("/product/<int:product_id>/review", methods=["POST"])
+def add_product_review(product_id):
+    if "user" not in session:
+        return redirect("/login")
+
+    rating = request.form.get("rating")
+    review_text = request.form.get("review_text", "").strip()
+
+    if not rating or not review_text:
+        return redirect("/product-reviews")
+
+    try:
+        rating = int(rating)
+
+        if rating < 1 or rating > 5:
+            return redirect("/product-reviews")
+
+    except ValueError:
+        return redirect("/product-reviews")
+
+    conn = get_db_connection()
+
+    # Make sure the product exists
+    product = conn.execute(
+        "SELECT id FROM products WHERE id = ?",
+        (product_id,)
+    ).fetchone()
+
+    if not product:
+        conn.close()
+        return redirect("/product-reviews")
+
+    conn.execute("""
+        INSERT INTO product_reviews
+        (product_id, user_email, rating, review_text)
+        VALUES (?, ?, ?, ?)
+    """, (
+        product_id,
+        session["user_email"],
+        rating,
+        review_text
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/product-reviews")
     
 @app.route("/logout")
 def logout():

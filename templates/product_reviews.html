@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Product Reviews - GlowGuide</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+            GlowGuide
+        </a>
+
+        <a
+            href="/dashboard"
+            class="btn btn-outline-light"
+        >
+            Dashboard
+        </a>
+    </div>
+</nav>
+
+
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2>Product Reviews</h2>
+        <p class="text-muted">
+            Explore skincare products, suitability and user reviews
+        </p>
+    </div>
+
+    <!-- PRODUCT SEARCH -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-7">
+
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="productSearch"
+                    class="form-control"
+                    placeholder="Search by product name, brand or category..."
+                >
+            </div>
+
+        </div>
+    </div>
+
+
+    {% for product in products %}
+
+    <div
+    class="card shadow-sm mb-5 product-card"
+    data-name="{{ product['name']|lower }}"
+    data-brand="{{ product['brand']|lower }}"
+    data-category="{{ product['category']|lower }}"
+    >
+        <div class="card-body p-4">
+
+            <div class="row align-items-center">
+
+                <!-- LEFT SIDE -->
+                <div class="col-md-8">
+
+                    <h3 class="mb-3">
+                        {{ product["name"] }}
+                    </h3>
+
+                    <p>
+                        <strong>Brand:</strong>
+                        {{ product["brand"] }}
+                    </p>
+
+                    <p>
+                        <strong>Category:</strong>
+                        {{ product["category"] }}
+                    </p>
+
+                    <p>
+                        <strong>Description:</strong><br>
+
+                        {{ product["description"]
+                           or "No description available." }}
+                    </p>
+
+                    <p>
+                        <strong>Suitable Skin Type:</strong><br>
+
+                        {{ product["skin_types"] }}
+                    </p>
+
+                    <div class="mb-3">
+
+                        <strong>Recommended By:</strong>
+
+                        {% set rec_data = namespace(found=false) %}
+
+                        {% for recommendation in recommendations %}
+
+                            {% if recommendation["product_id"] == product["id"] %}
+
+                                {% set rec_data.found = true %}
+
+                                <div class="border rounded p-3 mt-2 bg-light">
+
+                                    <h6 class="mb-1">
+                                        {{ recommendation["recommender_name"] }}
+                                    </h6>
+
+                                    {% if recommendation["recommender_title"] %}
+
+                                        <small class="text-muted">
+                                            {{ recommendation["recommender_title"] }}
+                                        </small>
+
+                                    {% endif %}
+
+                                    <p class="mt-2 mb-2">
+                                        <strong>Why recommended:</strong><br>
+                                        {{ recommendation["recommendation_reason"] }}
+                                    </p>
+
+                                    {% if recommendation["reference_url"] %}
+
+                                        <a
+                                            href="{{ recommendation['reference_url'] }}"
+                                            target="_blank"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>
+                                            {{ recommendation["reference_title"]
+                                            or "View Reference" }}
+                                        </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+
+                        {% if not rec_data.found %}
+
+                            <p class="text-muted mt-2">
+                                No expert recommendation added yet.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- RIGHT SIDE -->
+                <div class="col-md-4 text-center">
+
+                    {% if product["image"] %}
+
+                        <img
+                            src="{{ url_for('static', filename=product['image']) }}"
+                            alt="{{ product['name'] }}"
+                            class="img-fluid rounded"
+                            style="max-height: 300px; object-fit: contain;"
+                        >
+
+                    {% else %}
+
+                        <div class="text-muted">
+                            No product image available
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <hr class="my-4">
+
+
+            <!-- REVIEW AREA -->
+            <h5 class="mb-3">
+                <i class="bi bi-star me-2"></i>
+                Rate & Review This Product
+            </h5>
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'add_product_review',
+                    product_id=product['id']
+                ) }}"
+            >
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+                            Your Rating
+                        </label>
+
+                        <select
+                            name="rating"
+                            class="form-select"
+                            required
+                        >
+                            <option value="">Select</option>
+                            <option value="5">★★★★★ - 5</option>
+                            <option value="4">★★★★☆ - 4</option>
+                            <option value="3">★★★☆☆ - 3</option>
+                            <option value="2">★★☆☆☆ - 2</option>
+                            <option value="1">★☆☆☆☆ - 1</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-9 mb-3">
+
+                        <label class="form-label">
+                            Your Review
+                        </label>
+
+                        <textarea
+                            name="review_text"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Share your experience with this product..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    <i class="bi bi-send me-1"></i>
+                    Submit Review
+                </button>
+
+            </form>
+
+            <!-- DISPLAY USER REVIEWS -->
+            <hr class="my-4">
+
+            <h5 class="mb-3">
+                <i class="bi bi-chat-left-text me-2"></i>
+                User Reviews
+            </h5>
+
+            {% set rating_data = namespace(total=0, count=0) %}
+
+            {% for review in reviews %}
+                {% if review["product_id"] == product["id"] %}
+                    {% set rating_data.total = rating_data.total + review["rating"] %}
+                    {% set rating_data.count = rating_data.count + 1 %}
+                {% endif %}
+            {% endfor %}
+
+
+            {% if rating_data.count > 0 %}
+
+                <div class="mb-3">
+
+                    <span class="text-warning fs-5">
+                        ★
+                    </span>
+
+                    <strong>
+                        {{ "%.1f"|format(
+                            rating_data.total / rating_data.count
+                        ) }} / 5
+                    </strong>
+
+                    <span class="text-muted">
+                        ({{ rating_data.count }}
+                        {% if rating_data.count == 1 %}
+                            review
+                        {% else %}
+                            reviews
+                        {% endif %})
+                    </span>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted">
+                    No reviews yet. Be the first to review this product.
+                </p>
+
+            {% endif %}
+
+            {% for review in reviews %}
+
+                {% if review["product_id"] == product["id"] %}
+
+                    <div class="border rounded p-3 mb-3 bg-light">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+
+                            <!-- USER NAME -->
+                            <strong>
+                                <i class="bi bi-person-circle me-1"></i>
+                                {{ review["fullname"] or "GlowGuide User" }}
+                            </strong>
+
+                            <!-- DATE -->
+                            <small class="text-muted">
+                                {{ review["created_at"] }}
+                            </small>
+
+                        </div>
+
+
+                        <!-- STAR RATING -->
+                        <div class="text-warning mb-2">
+
+                            {% for i in range(review["rating"]) %}
+                                ★
+                            {% endfor %}
+
+                            {% for i in range(5 - review["rating"]) %}
+                                ☆
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- REVIEW -->
+                        <p class="mb-0">
+                            {{ review["review_text"] }}
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+
+            </div>
+            </div>
+
+            {% endfor %}
+
+        </div>
+    </div>
+
+
+</div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+<script>
+const searchInput = document.getElementById("productSearch");
+const productCards = document.querySelectorAll(".product-card");
+
+searchInput.addEventListener("input", function () {
+
+    const searchValue = this.value.toLowerCase().trim();
+
+    productCards.forEach(function (card) {
+
+        const name = card.dataset.name;
+        const brand = card.dataset.brand;
+        const category = card.dataset.category;
+
+        if (
+            name.includes(searchValue) ||
+            brand.includes(searchValue) ||
+            category.includes(searchValue)
+        ) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+});
+</script>
+
+</body>
+</html>
