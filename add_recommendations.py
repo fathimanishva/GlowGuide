@@ -253,6 +253,560 @@ if product:
 else:
     print("Product not found:", product_name)
 
+# Remove duplicate recommendations
+cursor.execute("""
+    DELETE FROM product_recommendations
+    WHERE id NOT IN (
+        SELECT MIN(id)
+        FROM product_recommendations
+        GROUP BY product_id, recommender_name
+    )
+""")
+
+print("Duplicate recommendations removed.")
+
+product_name = "2% Sali-Cinamide Anti-Acne Face Wash"
+recommender_name = "Dermatologist Approved"
+
+cursor.execute("""
+    SELECT id
+    FROM products
+    WHERE name = ?
+""", (product_name,))
+
+product = cursor.fetchone()
+
+if product:
+    product_id = product[0]
+
+    # Check before inserting
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if not cursor.fetchone():
+
+        cursor.execute("""
+            INSERT INTO product_recommendations
+            (
+                product_id,
+                recommender_name,
+                recommender_title,
+                recommendation_reason,
+                reference_title,
+                reference_url
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            product_id,
+            recommender_name,
+            "The Derma Co Official Dermatology Evidence",
+            "The Derma Co states that this product is dermatologist-approved. "
+            "It is formulated with 2% Salicylic Acid and 2% Niacinamide "
+            "for acne-prone, oily and combination skin, helping control "
+            "excess oil, unclog pores and reduce breakouts.",
+            "The Derma Co - 2% Sali-Cinamide Anti-Acne Face Wash",
+            "https://thedermaco.com/products/2-sali-cinamide-anti-acne-face-wash-with-2-salicylic-acid-2-niacinamide-200ml"
+        ))
+
+        print("Added:", product_name)
+
+    else:
+        print("Already exists:", product_name)
+
+else:
+    print("Product not found:", product_name)
+
+# Dot & Key Watermelon SuperGlow Facial Gel Cleanser
+
+product_name = "Watermelon SuperGlow Facial Gel Cleanser"
+recommender_name = "Dermatologically Tested"
+
+cursor.execute("""
+    SELECT id
+    FROM products
+    WHERE name = ?
+""", (product_name,))
+
+product = cursor.fetchone()
+
+if product:
+    product_id = product[0]
+
+    # Prevent duplicate recommendation
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if not cursor.fetchone():
+
+        cursor.execute("""
+            INSERT INTO product_recommendations
+            (
+                product_id,
+                recommender_name,
+                recommender_title,
+                recommendation_reason,
+                reference_title,
+                reference_url
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            product_id,
+            recommender_name,
+            "Product Testing Evidence",
+            "The Watermelon SuperGlow Facial Gel Cleanser is listed as "
+            "dermatologically tested. It is a gel cleanser formulated "
+            "with ingredients including watermelon, cucumber and Vitamin C.",
+            "Dot & Key - Watermelon SuperGlow Facial Gel Cleanser",
+            "https://www.myntra.com/face-wash-and-cleanser/dot26key/dot--key-watermelon-super-glow-vitamin-c-face-wash-gel-for-oily-skin---120-ml/16549572/buy"
+        ))
+
+        print("Added:", product_name)
+
+    else:
+        print("Already exists:", product_name)
+
+else:
+    print("Product not found:", product_name)
+
+# CeraVe PM Facial Moisturizing Lotion
+
+product_name = "PM Facial Moisturizing Lotion"
+recommender_name = "Dr. Heather Woolery-Lloyd, MD"
+
+cursor.execute("""
+    SELECT id
+    FROM products
+    WHERE name = ?
+""", (product_name,))
+
+product = cursor.fetchone()
+
+if product:
+    product_id = product[0]
+
+    # Prevent duplicates
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if not cursor.fetchone():
+
+        cursor.execute("""
+            INSERT INTO product_recommendations
+            (
+                product_id,
+                recommender_name,
+                recommender_title,
+                recommendation_reason,
+                reference_title,
+                reference_url
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            product_id,
+            recommender_name,
+            "Board-Certified Dermatologist",
+            "Dr. Heather Woolery-Lloyd specifically recommends "
+            "CeraVe PM Facial Moisturizing Lotion for oily, "
+            "acne-prone patients and describes it as a lightweight moisturizer.",
+            "CeraVe - Dr. Heather Woolery-Lloyd",
+            "https://www.cerave.com/authors/heather-woolery-lloyd"
+        ))
+
+        print("Added:", product_name)
+
+    else:
+        print("Already exists:", product_name)
+
+else:
+    print("Product not found:", product_name)
+
+# ==========================================================
+# MOISTURIZER RECOMMENDATIONS
+# ==========================================================
+
+moisturizer_recommendations = [
+
+    # Dot & Key Barrier Repair Moisturizer
+    (
+        "Barrier Repair Moisturizer",
+        "Dr. Nirupama Parwanda",
+        "Dermatologist",
+        "Dr. Nirupama Parwanda discusses and rates Dot & Key "
+        "Barrier Repair Moisturizer in her dermatologist review "
+        "of popular moisturizers. Dot & Key also reports clinical "
+        "testing showing improvement in skin barrier and moisturization.",
+        "Ask Dr Nirupama - Moisturiser Rating by a Dermatologist",
+        "https://www.youtube.com/watch?v=u1ayFr6q3k0"
+    ),
+
+    # Cetaphil Moisturising Cream
+    (
+        "Moisturising Cream",
+        "Dermatologist Tested",
+        "Cetaphil Clinical Evidence",
+        "Cetaphil states that this moisturizer is dermatologist "
+        "tested and clinically proven to be gentle on sensitive skin. "
+        "It uses a dermatologist-backed blend of niacinamide, "
+        "panthenol and glycerin.",
+        "Cetaphil India - Moisturising Cream",
+        "https://www.cetaphil.in/moisturizers/moisturising-cream/8906005273436.html"
+    ),
+
+    # The Derma Co 5% Nia-Ceramide
+    (
+        "5% Nia-Ceramide Daily Hydrating Moisturizer",
+        "Dr. Bhagirath Patel, M.D., DVL & Dr. Parth Joshi",
+        "Consultant Dermatologist & Principal Investigator",
+        "The moisturizer underwent Primary Skin Irritation Testing "
+        "on human subjects under dermatologist supervision. "
+        "The published certificate found the product dermatologically "
+        "safe for use and non-irritant.",
+        "The Derma Co - Dermatological Patch Test Certificate",
+        "https://thedermaco.com/pages/the-derma-co-5-nia-ceramide-daily-hydrating-moisturizer-patch-test-certificate"
+    )
+]
+
+
+for item in moisturizer_recommendations:
+
+    product_name = item[0]
+    recommender_name = item[1]
+
+    cursor.execute("""
+        SELECT id
+        FROM products
+        WHERE name = ?
+    """, (product_name,))
+
+    product = cursor.fetchone()
+
+    if not product:
+        print("Product not found:", product_name)
+        continue
+
+    product_id = product[0]
+
+    # Prevent duplicate recommendations
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if cursor.fetchone():
+        print(
+            "Already exists:",
+            product_name,
+            "-",
+            recommender_name
+        )
+        continue
+
+    cursor.execute("""
+        INSERT INTO product_recommendations
+        (
+            product_id,
+            recommender_name,
+            recommender_title,
+            recommendation_reason,
+            reference_title,
+            reference_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        product_id,
+        recommender_name,
+        item[2],
+        item[3],
+        item[4],
+        item[5]
+    ))
+
+    print(
+        "Added:",
+        product_name,
+        "-",
+        recommender_name
+    )
+
+remaining_moisturizers = [
+
+    # Neutrogena Hydro Boost Water Gel
+    (
+        "Hydro Boost Water Gel",
+        "Dr. Daniel Sugai",
+        "Board-Certified Dermatologist",
+        "Dr. Daniel Sugai specifically reviews and compares "
+        "Neutrogena Hydro Boost Water Gel in his dermatologist "
+        "skincare review.",
+        "Dr. Daniel Sugai - Hydro Boost Water Gel Review",
+        "https://www.youtube.com/watch?v=R3uKkMMM5VU"
+    ),
+
+    # CeraVe PM Facial Moisturizing Lotion
+    (
+        "PM Facial Moisturizing Lotion",
+        "Dr. Heather Woolery-Lloyd, MD",
+        "Board-Certified Dermatologist",
+        "Dr. Heather Woolery-Lloyd specifically recommends "
+        "CeraVe PM for oily, acne-prone patients and describes "
+        "it as a lightweight moisturizer.",
+        "CeraVe - Dr. Heather Woolery-Lloyd",
+        "https://www.cerave.com/authors/heather-woolery-lloyd"
+    )
+]
+
+
+for item in remaining_moisturizers:
+
+    product_name = item[0]
+    recommender_name = item[1]
+
+    cursor.execute("""
+        SELECT id
+        FROM products
+        WHERE name = ?
+    """, (product_name,))
+
+    product = cursor.fetchone()
+
+    if not product:
+        print("Product not found:", product_name)
+        continue
+
+    product_id = product[0]
+
+    # Prevent duplicates
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if cursor.fetchone():
+        print("Already exists:", product_name)
+        continue
+
+    cursor.execute("""
+        INSERT INTO product_recommendations
+        (
+            product_id,
+            recommender_name,
+            recommender_title,
+            recommendation_reason,
+            reference_title,
+            reference_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        product_id,
+        recommender_name,
+        item[2],
+        item[3],
+        item[4],
+        item[5]
+    ))
+
+    print("Added:", product_name, "-", recommender_name)
+
+product_name = "Ceramide + HA Intense Daily Face Moisturizer"
+recommender_name = "Designed by Dermatologists"
+
+cursor.execute("""
+    SELECT id
+    FROM products
+    WHERE name = ?
+""", (product_name,))
+
+product = cursor.fetchone()
+
+if product:
+    product_id = product[0]
+
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (product_id, recommender_name))
+
+    if not cursor.fetchone():
+
+        cursor.execute("""
+            INSERT INTO product_recommendations
+            (
+                product_id,
+                recommender_name,
+                recommender_title,
+                recommendation_reason,
+                reference_title,
+                reference_url
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            product_id,
+            recommender_name,
+            "The Derma Co Official Dermatology Evidence",
+            "The Derma Co states that this moisturizer is designed "
+            "by dermatologists. It combines ceramides and hyaluronic "
+            "acid and is intended for intensive moisturization and "
+            "supporting the skin moisture barrier.",
+            "The Derma Co - Ceramide + HA Intense Daily Face Moisturizer",
+            "https://thedermaco.com/products/ceramide-ha-intense-moisturizer"
+        ))
+
+        print("Added:", product_name)
+
+    else:
+        print("Already exists:", product_name)
+
+else:
+    print("Product not found:", product_name)
+
+last_moisturizers = [
+
+    # Dot & Key Watermelon Cooling Icy Gel Moisturizer
+    (
+        "Watermelon Cooling Icy Gel Moisturizer",
+        "Clinical Product Evidence",
+        "Dot & Key Official Product Evidence",
+        "Dot & Key identifies this as a lightweight cooling gel "
+        "moisturizer for normal, oily and combination skin. "
+        "The Watermelon range is presented with clinically proven "
+        "results and the moisturizer contains ingredients including "
+        "niacinamide, hyaluronic acid and watermelon extract.",
+        "Dot & Key - Watermelon Cooling Icy Gel Moisturizer",
+        "https://www.dotandkey.com/collections/moisturizers"
+    )
+]
+
+
+for item in last_moisturizers:
+
+    product_name = item[0]
+    recommender_name = item[1]
+
+    cursor.execute("""
+        SELECT id
+        FROM products
+        WHERE name = ?
+    """, (product_name,))
+
+    product = cursor.fetchone()
+
+    if not product:
+        print("Product not found:", product_name)
+        continue
+
+    product_id = product[0]
+
+    # Prevent duplicates
+    cursor.execute("""
+        SELECT id
+        FROM product_recommendations
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        product_id,
+        recommender_name
+    ))
+
+    if cursor.fetchone():
+        print("Already exists:", product_name)
+        continue
+
+    cursor.execute("""
+        INSERT INTO product_recommendations
+        (
+            product_id,
+            recommender_name,
+            recommender_title,
+            recommendation_reason,
+            reference_title,
+            reference_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        product_id,
+        recommender_name,
+        item[2],
+        item[3],
+        item[4],
+        item[5]
+    ))
+
+    print("Added:", product_name, "-", recommender_name)
+
+# Update Plum Green Tea Mattifying Moisturizer evidence
+
+product_name = "Green Tea Mattifying Moisturizer"
+
+cursor.execute("""
+    SELECT id
+    FROM products
+    WHERE name = ?
+""", (product_name,))
+
+product = cursor.fetchone()
+
+if product:
+    product_id = product[0]
+
+    cursor.execute("""
+        UPDATE product_recommendations
+        SET recommender_name = ?,
+            recommender_title = ?,
+            recommendation_reason = ?,
+            reference_title = ?,
+            reference_url = ?
+        WHERE product_id = ?
+        AND recommender_name = ?
+    """, (
+        "Divya Agarwal",
+        "Author - Plum Official Product Guide",
+        "Divya Agarwal authored Plum's official guide specifically "
+        "about Green Tea Mattifying Moisturizer. The guide explains "
+        "how to use the product and discusses its suitability for "
+        "combination, oily and acne-prone skin.",
+        "Plum - How to Use Green Tea Mattifying Moisturizer",
+        "https://plumgoodness.com/blogs/how-to-use/how-to-use-green-tea-mattifying-moisturizer",
+        product_id,
+        "Official Product Evidence"
+    ))
+
+    print("Updated Plum recommendation.")
+
+else:
+    print("Product not found:", product_name)
 
 conn.commit()
 conn.close()
