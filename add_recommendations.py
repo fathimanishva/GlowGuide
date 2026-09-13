@@ -475,7 +475,7 @@ moisturizer_recommendations = [
 
     # The Derma Co 5% Nia-Ceramide
     (
-        "5% Nia-Ceramide Daily Hydrating Moisturizer",
+        "The Derma Co. 5% Nia-Ceramide Mattifying Moisturizer",
         "Dr. Bhagirath Patel, M.D., DVL & Dr. Parth Joshi",
         "Consultant Dermatologist & Principal Investigator",
         "The moisturizer underwent Primary Skin Irritation Testing "
@@ -638,7 +638,7 @@ for item in remaining_moisturizers:
 
     print("Added:", product_name, "-", recommender_name)
 
-product_name = "Ceramide + HA Intense Daily Face Moisturizer"
+product_name = "The Derma Co Ceramide + HA Intense Moisturizer Cream With Hyaluronic Acid"
 recommender_name = "Designed by Dermatologists"
 
 cursor.execute("""
