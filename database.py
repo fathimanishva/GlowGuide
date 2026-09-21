@@ -167,7 +167,16 @@ CREATE TABLE IF NOT EXISTS product_recommendations (
 
 print("Product recommendations table is ready.")
 
+# Add profile_image column to users table
+try:
+    cursor.execute("""
+        ALTER TABLE users
+        ADD COLUMN profile_image TEXT
+    """)
+    print("profile_image column added.")
 
+except sqlite3.OperationalError:
+    print("profile_image column already exists.")
 
 conn.commit()
 

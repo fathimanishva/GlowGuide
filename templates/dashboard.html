@@ -3,276 +3,1247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Dashboard - GlowGuide</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --primary: #d94d72;
+            --primary-dark: #b92f58;
+            --text-dark: #17213a;
+            --text-muted: #687087;
+            --page-bg: #fffafa;
+            --sidebar-bg: #ffffff;
+            --border: #f0e5e8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text-dark);
+            font-family: "DM Sans", sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 28px 20px;
+            z-index: 1000;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 38px;
+            padding-left: 8px;
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #ffe0e9;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 25px;
+        }
+
+        .brand h2 {
+            margin: 0;
+            font-family: "Playfair Display", serif;
+            font-weight: 600;
+            font-size: 27px;
+            color: #17213a;
+        }
+
+        .brand p {
+            margin: 2px 0 0;
+            color: #9096a5;
+            font-size: 11px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+
+            padding: 13px 15px;
+            border-radius: 12px;
+
+            color: #526078;
+            font-size: 15px;
+            font-weight: 500;
+
+            transition: 0.2s ease;
+        }
+
+        .sidebar-link i {
+            font-size: 20px;
+            width: 25px;
+        }
+
+        .sidebar-link:hover {
+            background: #fff1f5;
+            color: var(--primary-dark);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(
+                90deg,
+                #fff0f4,
+                #fff7f9
+            );
+
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .sidebar-divider {
+            border-top: 1px solid #eeeeee;
+            margin: 20px 8px;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .sidebar-quote {
+            background: linear-gradient(
+                145deg,
+                #fff5f7,
+                #fffafa
+            );
+
+            border: 1px solid #f7e8ec;
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .sidebar-quote i {
+            font-size: 28px;
+            color: #e7a3b5;
+        }
+
+        .sidebar-quote p {
+            font-family: "Playfair Display", serif;
+            color: #50576a;
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 10px 0 0;
+        }
+
+
+        /* =========================
+           MAIN CONTENT
+        ========================= */
+
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+
+        /* =========================
+           TOP BAR
+        ========================= */
+
+        .topbar {
+            height: 78px;
+            background: rgba(255,255,255,0.9);
+            border-bottom: 1px solid #f3e9ec;
+
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+
+            padding: 0 42px;
+        }
+
+        .profile-button {
+            border: none;
+            background: transparent;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: #17213a;
+            font-weight: 600;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+
+            border-radius: 50%;
+
+            background: linear-gradient(
+                135deg,
+                #f4c7d5,
+                #fbe6ed
+            );
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #9e3152;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+
+        /* =========================
+           DASHBOARD
+        ========================= */
+
+        .dashboard-container {
+            max-width: 1250px;
+            margin: auto;
+            padding: 35px 42px 50px;
+        }
+
+
+        /* =========================
+           WELCOME
+        ========================= */
+
+        .welcome-row {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 28px;
+            align-items: stretch;
+            margin-bottom: 38px;
+        }
+
+        .welcome-label {
+            color: #d96b89;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .welcome-title {
+            font-family: "Playfair Display", serif;
+            font-size: 49px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #17213a;
+        }
+
+        .welcome-title span {
+            color: #f07c9d;
+        }
+
+        .welcome-description {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+
+        /* =========================
+           QUOTE CARD
+        ========================= */
+
+        .quote-card {
+            position: relative;
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(206, 225, 194, 0.65),
+                    transparent 25%
+                ),
+                linear-gradient(
+                    135deg,
+                    #fff1f3,
+                    #fff8f5
+                );
+
+            border: 1px solid #f6e5e8;
+            border-radius: 22px;
+
+            padding: 30px 34px;
+            min-height: 175px;
+        }
+
+        .quote-card::after {
+            content: "🌿";
+            position: absolute;
+            right: 20px;
+            bottom: -12px;
+            font-size: 80px;
+            opacity: 0.7;
+            transform: rotate(-15deg);
+        }
+
+        .quote-text {
+            position: relative;
+            z-index: 2;
+
+            font-family: "Playfair Display", serif;
+            font-size: 25px;
+            line-height: 1.4;
+
+            max-width: 75%;
+            color: #5d2935;
+        }
+
+        .quote-author {
+            position: relative;
+            z-index: 2;
+
+            color: #a26675;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 11px;
+            margin-top: 14px;
+        }
+
+
+        /* =========================
+           SECTION TITLE
+        ========================= */
+
+        .section-heading {
+            margin-bottom: 20px;
+        }
+
+        .section-heading h3 {
+            font-family: "Playfair Display", serif;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-heading p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 15px;
+        }
+
+
+        /* =========================
+           FEATURE CARDS
+        ========================= */
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+
+            min-height: 185px;
+
+            background: white;
+            border: 1px solid #eee6e8;
+            border-radius: 18px;
+
+            padding: 24px;
+
+            display: flex;
+            gap: 18px;
+
+            color: inherit;
+
+            box-shadow:
+                0 5px 18px rgba(62, 39, 47, 0.04);
+
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+
+            box-shadow:
+                0 12px 28px rgba(73, 46, 56, 0.10);
+        }
+
+        .feature-card::after {
+            content: "";
+            position: absolute;
+
+            width: 180px;
+            height: 80px;
+
+            right: -30px;
+            bottom: -45px;
+
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        .feature-icon {
+            width: 58px;
+            height: 58px;
+            min-width: 58px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 27px;
+        }
+
+        .feature-info {
+            padding-top: 5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .feature-info h5 {
+            font-weight: 700;
+            font-size: 17px;
+            margin-bottom: 9px;
+        }
+
+        .feature-info p {
+            color: #687087;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+            max-width: 200px;
+        }
+
+        .card-arrow {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+
+            width: 34px;
+            height: 34px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 17px;
+
+            z-index: 3;
+        }
+
+
+        /* CARD COLORS */
+
+        .card-pink .feature-icon,
+        .card-pink .card-arrow {
+            background: #ffe1ea;
+            color: #c93663;
+        }
+
+        .card-pink::after {
+            background: #ffe6ee;
+        }
+
+
+        .card-purple .feature-icon,
+        .card-purple .card-arrow {
+            background: #eee4ff;
+            color: #6540c7;
+        }
+
+        .card-purple::after {
+            background: #efe7ff;
+        }
+
+
+        .card-green .feature-icon,
+        .card-green .card-arrow {
+            background: #dff5eb;
+            color: #159160;
+        }
+
+        .card-green::after {
+            background: #dff5eb;
+        }
+
+
+        .card-orange .feature-icon,
+        .card-orange .card-arrow {
+            background: #fff0d7;
+            color: #d27b13;
+        }
+
+        .card-orange::after {
+            background: #fff0d7;
+        }
+
+
+        .card-blue .feature-icon,
+        .card-blue .card-arrow {
+            background: #dff1ff;
+            color: #187cc0;
+        }
+
+        .card-blue::after {
+            background: #dff1ff;
+        }
+
+
+        /* =========================
+           REMINDER BANNER
+        ========================= */
+
+        .reminder-banner {
+            margin-top: 28px;
+
+            background: linear-gradient(
+                110deg,
+                #fff0f3,
+                #fff7f8
+            );
+
+            border: 1px solid #f6e5e8;
+            border-radius: 20px;
+
+            min-height: 155px;
+
+            padding: 30px 38px;
+
+            display: flex;
+            align-items: center;
+            gap: 30px;
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reminder-icon {
+            width: 95px;
+            height: 95px;
+
+            border-radius: 50%;
+
+            background: #f9dbe3;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 45px;
+        }
+
+        .reminder-label {
+            color: #dc718e;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        .reminder-banner h3 {
+            font-family: "Playfair Display", serif;
+            margin: 6px 0;
+            font-size: 28px;
+        }
+
+        .reminder-banner p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 1100px) {
+
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .welcome-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        @media (max-width: 768px) {
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-container {
+                padding: 25px 18px;
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-title {
+                font-size: 38px;
+            }
+
+            .reminder-banner {
+                padding: 25px;
+            }
+
+            .reminder-icon {
+                display: none;
+            }
+        }
+
+        /* =========================
+            COLLAPSIBLE SIDEBAR
+            ========================= */
+
+            /* Header containing logo + hamburger */
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+
+                margin-bottom: 38px;
+            }
+
+
+            /* Brand inside sidebar header */
+            .sidebar-header .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+
+                margin-bottom: 0;
+                padding-left: 0;
+
+                flex: 1;
+            }
+
+
+            /* Hamburger button */
+            .sidebar-toggle {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+
+                border: none;
+                border-radius: 10px;
+
+                background: #fff0f4;
+                color: #c93663;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                font-size: 24px;
+
+                margin: 0;
+                padding: 0;
+
+                cursor: pointer;
+
+                transition:
+                    background 0.2s ease,
+                    transform 0.2s ease;
+            }
+
+
+            .sidebar-toggle:hover {
+                background: #ffe1e9;
+            }
+
+
+            /* Smooth sidebar transition */
+            .sidebar {
+                transition:
+                    width 0.3s ease,
+                    padding 0.3s ease;
+            }
+
+
+            .main-content {
+                transition: margin-left 0.3s ease;
+            }
+
+
+           /* =========================
+            COLLAPSIBLE SIDEBAR
+            ========================= */
+
+            .sidebar-toggle {
+                width: 40px;
+                height: 40px;
+
+                border: none;
+                border-radius: 10px;
+
+                background: #fff0f4;
+                color: #c93663;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                font-size: 24px;
+
+                margin-left: auto;
+                margin-bottom: 20px;
+
+                cursor: pointer;
+
+                transition: 0.2s ease;
+            }
+
+            .sidebar-toggle:hover {
+                background: #ffe1e9;
+            }
+
+
+            /* Smooth transitions */
+
+            .sidebar {
+                transition: width 0.3s ease;
+            }
+
+            .main-content {
+                transition: margin-left 0.3s ease;
+            }
+
+
+            /* COLLAPSED SIDEBAR */
+
+            .sidebar.collapsed {
+                width: 85px;
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+
+            /* Hide GlowGuide name */
+
+            .sidebar.collapsed .brand > div:last-child {
+                display: none;
+            }
+
+            .sidebar.collapsed .brand {
+                justify-content: center;
+                padding-left: 0;
+            }
+
+
+            /* Hide menu text */
+
+            .sidebar.collapsed .sidebar-link {
+                justify-content: center;
+                gap: 0;
+            }
+
+            .sidebar.collapsed .sidebar-link {
+                font-size: 0;
+            }
+
+            .sidebar.collapsed .sidebar-link i {
+                font-size: 21px;
+                width: auto;
+            }
+
+
+            /* Hide bottom quote */
+
+            .sidebar.collapsed .sidebar-quote {
+                display: none;
+            }
+
+
+            /* Expand dashboard */
+
+            .main-content.sidebar-collapsed {
+                margin-left: 85px;
+            }
+
+
+            /* Center hamburger when collapsed */
+
+            .sidebar.collapsed .sidebar-toggle {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+    </style>
 </head>
 
-<body class="bg-light">
 
-<!-- Navbar -->
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+<body>
 
-    <div class="container">
+<!-- =========================
+     SIDEBAR
+========================= -->
 
-        <!-- Logo -->
-        <a class="navbar-brand fw-bold text-primary">
-            🌸 GlowGuide
+<aside class="sidebar">
+
+    <div class="brand">
+           
+
+        <div class="brand-icon">
+            🌸
+        </div>
+
+        <div>
+            <h2>GlowGuide</h2>
+            <p>Skincare Smarter, Brighter You</p>
+        </div>
+
+    </div>
+
+     <button class="sidebar-toggle"
+            id="sidebarToggle"
+            type="button"
+            aria-label="Toggle sidebar">
+
+            <i class="bi bi-list"></i>
+
+        </button>
+
+
+    <nav class="sidebar-nav">
+
+        <!-- Dashboard -->
+        <a href="{{ url_for('dashboard') }}"
+        class="sidebar-link active">
+
+            <i class="bi bi-house-door"></i>
+            Dashboard
+
         </a>
 
 
-        <!-- Profile Dropdown -->
-        <div class="dropdown">
+        <!-- Profile -->
+        <a href="{{ url_for('profile') }}"
+        class="sidebar-link">
 
-            <button
-                class="btn btn-light dropdown-toggle d-flex align-items-center gap-2"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+            <i class="bi bi-person"></i>
+            My Profile
 
-                <i class="bi bi-person-circle fs-5"></i>
-
-                <span>
-                    {{ session['user'] }}
-                </span>
-
-            </button>
+        </a>
 
 
-            <ul class="dropdown-menu dropdown-menu-end shadow">
-
-                <!-- My Profile -->
-                <li>
-                    <a
-                        class="dropdown-item"
-                        href="{{ url_for('profile') }}">
-
-                        <i class="bi bi-person me-2"></i>
-                        My Profile
-
-                    </a>
-                </li>
+        <div class="sidebar-divider"></div>
 
 
-                <!-- History -->
-                <li>
-                    <a
-                        class="dropdown-item"
-                        href="{{ url_for('history') }}">
+        <!-- Settings -->
+        <a href="{{ url_for('change_password') }}"
+        class="sidebar-link">
 
-                        <i class="bi bi-clock-history me-2"></i>
-                        Analysis History
+            <i class="bi bi-gear"></i>
+            Settings
 
-                    </a>
-                </li>
+        </a>
 
 
-                <!-- Change Password -->
-                <li>
-                    <a
-                        class="dropdown-item"
-                        href="{{ url_for('change_password') }}">
+        <!-- Logout -->
+        <a href="{{ url_for('logout') }}"
+        class="sidebar-link">
 
-                        <i class="bi bi-key me-2"></i>
-                        Change Password
+            <i class="bi bi-box-arrow-right"></i>
+            Logout
 
-                    </a>
-                </li>
+        </a>
 
-
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
+    </nav>
 
 
-                <!-- Logout -->
-                <li>
-                    <a
-                        class="dropdown-item text-danger"
-                        href="{{ url_for('logout') }}">
+    <div class="sidebar-bottom">
 
-                        <i class="bi bi-box-arrow-right me-2"></i>
-                        Logout
+        <div class="sidebar-quote">
 
-                    </a>
-                </li>
+            <i class="bi bi-flower1"></i>
 
-            </ul>
+            <p>
+                Healthy skin is a reflection of self care
+            </p>
+
+            <div style="color:#df91a6; margin-top:8px;">
+                ♥
+            </div>
 
         </div>
 
     </div>
 
-</nav>
+</aside>
 
-<!-- Welcome Section -->
-<div class="container mt-5">
 
-    <h2 class="fw-bold">
-        Welcome, {{ session['user'] }} 👋
-    </h2>
+<!-- =========================
+     MAIN
+========================= -->
 
-    <h3 class="fw-bold">
-        Healthy Skin Begins Here
+<main class="main-content">
 
-    </h3>
 
-    <p class="text-muted fs-5">
-    Analyze your skin, discover personalized care, achieve healthier and glowing skin with AI-powered insights.
-</p>
+    <!-- TOP BAR -->
 
-</div>
+    <header class="topbar">
 
-<div class="container mt-4">
+        <div class="profile-button">
 
-    <div class="text-center mb-4">
+            <div class="avatar">
+                {{ session['user'][0]|upper }}
+            </div>
 
-    <h3 class="fw-bold">
-        Choose how you want to assess your skin
-    </h3>
+            <span>
+                {{ session['user'] }}
+            </span>
 
-    <p class="text-muted">
-        Choose the assessment method you are most comfortable with.
-    </p>
+        </div>
 
-    </div>
+    </header>
 
-    <div class="row g-4">
 
-       <!-- Image Analysis -->
-<div class="col-md-6 col-lg-3">
+    <!-- DASHBOARD CONTENT -->
 
-    <div class="card shadow-sm h-100 text-center p-3">
+    <div class="dashboard-container">
 
-        <i class="bi bi-camera-fill display-4 text-primary"></i>
 
-        <h5 class="mt-3">
-            📷 Image Analysis
-        </h5>
+        <!-- WELCOME AREA -->
 
-        <p class="text-muted">
-            Upload a photo for AI-powered analysis.
-        </p>
+        <section class="welcome-row">
 
-        <a href="{{ url_for('upload') }}"
-           class="btn btn-primary">
+            <div>
 
-            Start Image Analysis
+                <div class="welcome-label">
+                    Good to see you again
+                </div>
 
-        </a>
+                <h1 class="welcome-title">
+                    Welcome, {{ session['user'] }}
+                    <span>♥</span>
+                </h1>
 
-    </div>
+                <p class="welcome-description">
+                    Let's continue your journey to healthier,
+                    happier skin ✨
+                </p>
 
-</div>
+            </div>
 
-        <!-- Skin Questionnaire -->
-<div class="col-md-6 col-lg-3">
 
-    <div class="card shadow-sm h-100 text-center p-3">
+            <div class="quote-card">
 
-        <i class="bi bi-question-circle display-4 text-secondary"></i>
+                <div class="quote-text">
+                    “Skincare is not a luxury,
+                    it's a form of self-care.”
+                </div>
 
-        <h5 class="mt-3">
-            📝 Skin Questionnaire
-        </h5>
+                <div class="quote-author">
+                    GlowGuide
+                </div>
 
-        <p class="text-muted">
-            Answer a few questions for a questionnaire-based assessment.
-        </p>
+            </div>
 
-        <a href="{{ url_for('questionnaire') }}"
-           class="btn btn-secondary">
+        </section>
 
-            Start Questionnaire
 
-        </a>
+        <!-- SECTION TITLE -->
 
-    </div>
+        <section class="section-heading">
 
-</div>
+            <h3>
+                What would you like to do today?
+            </h3>
 
-        <!-- Saved Recommendations -->
-        <div class="col-md-6 col-lg-3">
-
-            <div class="card shadow-sm h-100 text-center p-3">
-
-                <i class="bi bi-droplet-half display-4 text-info"></i>
-
-                <h5 class="mt-3">
-                    Recommendations
-                </h5>
-
-            <p class="text-muted">
-                View your latest personalized skincare products.
+            <p>
+                Explore GlowGuide's features and take the
+                next step towards better skin.
             </p>
 
-            <a href="{{ url_for('saved_recommendations') }}"
-            class="btn btn-info text-white">
+        </section>
 
-                View Recommendations
+
+        <!-- FEATURE GRID -->
+
+        <section class="feature-grid">
+
+
+            <!-- IMAGE ANALYSIS -->
+
+            <a href="{{ url_for('upload') }}"
+               class="feature-card card-pink">
+
+                <div class="feature-icon">
+                    <i class="bi bi-camera"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>Image Analysis</h5>
+
+                    <p>
+                        Upload a photo for AI-powered
+                        skin analysis.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
 
             </a>
 
+
+            <!-- QUESTIONNAIRE -->
+
+            <a href="{{ url_for('questionnaire') }}"
+               class="feature-card card-purple">
+
+                <div class="feature-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>Skin Questionnaire</h5>
+
+                    <p>
+                        Answer a few questions for a
+                        personalized assessment.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+            </a>
+
+
+            <!-- RECOMMENDATIONS -->
+
+            <a href="{{ url_for('saved_recommendations') }}"
+               class="feature-card card-green">
+
+                <div class="feature-icon">
+                    <i class="bi bi-droplet"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>Recommendations</h5>
+
+                    <p>
+                        View your latest personalized
+                        skincare products.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+            </a>
+
+
+            <!-- ROUTINE -->
+
+            <a href="{{ url_for('saved_routine') }}"
+               class="feature-card card-orange">
+
+                <div class="feature-icon">
+                    <i class="bi bi-sun"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>My Skincare Routine</h5>
+
+                    <p>
+                        View your saved morning and night
+                        skincare routine.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+            </a>
+
+
+            <!-- HISTORY -->
+
+            <a href="{{ url_for('history') }}"
+               class="feature-card card-blue">
+
+                <div class="feature-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>Analysis History</h5>
+
+                    <p>
+                        See your previous skin analyses.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+            </a>
+
+
+            <!-- PRODUCT REVIEWS -->
+
+            <a href="{{ url_for('product_reviews') }}"
+               class="feature-card card-pink">
+
+                <div class="feature-icon">
+                    <i class="bi bi-star"></i>
+                </div>
+
+                <div class="feature-info">
+
+                    <h5>Product Reviews</h5>
+
+                    <p>
+                        Explore product details,
+                        expert evidence and real reviews.
+                    </p>
+
+                </div>
+
+                <div class="card-arrow">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+            </a>
+
+        </section>
+
+
+        <!-- BOTTOM REMINDER -->
+
+        <section class="reminder-banner">
+
+            <div class="reminder-icon">
+                🌸
             </div>
 
-        </div>
+            <div>
 
-        <!-- Saved Routine -->
-        <div class="col-md-6 col-lg-3">
+                <div class="reminder-label">
+                    Skincare Reminder
+                </div>
 
-            <div class="card shadow-sm h-100 text-center p-3">
+                <h3>
+                    Glowing skin is a journey,
+                    not a destination.
+                </h3>
 
-                <i class="bi bi-sun display-4 text-primary"></i>
-
-                <h5 class="mt-3">
-                    My Skincare Routine
-                </h5>
-
-                <p class="text-muted">
-                    View your saved morning and night skincare routine.
+                <p>
+                    Stay consistent and be gentle with your skin.
                 </p>
 
-                <a href="{{ url_for('saved_routine') }}"
-                class="btn btn-primary">
-
-                    View Routine
-
-                </a>
-
             </div>
 
-        </div>
+        </section>
 
-        <!-- History -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card shadow-sm h-100 text-center p-3">
-                <i class="bi bi-clock-history display-4 text-warning"></i>
-                <h5 class="mt-3">History</h5>
-                <p class="text-muted">See your previous skin analyses.</p>
-                <a href="{{ url_for('history') }}"
-                    class="btn btn-warning">
-
-                    History
-                </a>
-            </div>
-        </div>
 
     </div>
 
-</div>
+</main>
+
 
 <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+<script>
+const sidebar = document.querySelector(".sidebar");
+const mainContent = document.querySelector(".main-content");
+const sidebarToggle = document.getElementById("sidebarToggle");
+
+sidebarToggle.addEventListener("click", function () {
+
+    sidebar.classList.toggle("collapsed");
+    mainContent.classList.toggle("sidebar-collapsed");
+
+});
+</script>
 
 </body>
 </html>

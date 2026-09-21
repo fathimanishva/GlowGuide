@@ -323,10 +323,9 @@ if product:
 else:
     print("Product not found:", product_name)
 
-# Dot & Key Watermelon SuperGlow Facial Gel Cleanser
+# Update Dot & Key Watermelon SuperGlow Facial Gel Cleanser evidence
 
 product_name = "Watermelon SuperGlow Facial Gel Cleanser"
-recommender_name = "Dermatologically Tested"
 
 cursor.execute("""
     SELECT id
@@ -339,45 +338,34 @@ product = cursor.fetchone()
 if product:
     product_id = product[0]
 
-    # Prevent duplicate recommendation
     cursor.execute("""
-        SELECT id
-        FROM product_recommendations
+        UPDATE product_recommendations
+        SET recommender_name = ?,
+            recommender_title = ?,
+            recommendation_reason = ?,
+            reference_title = ?,
+            reference_url = ?
         WHERE product_id = ?
         AND recommender_name = ?
     """, (
+        "Clinical & Dermatology Evidence",
+        "Dot & Key Official Evidence",
+        "Dot & Key reports clinically proven results for this cleanser. "
+        "Its official product information describes a self-assessment "
+        "study involving 36 subjects with oily skin, where 96% agreed "
+        "that their skin appeared less oily from the first use. "
+        "Dot & Key also includes this cleanser in its official guide "
+        "to dermatologist-recommended face washes.",
+        "Dot & Key - Watermelon SuperGlow Facial Gel Cleanser",
+        "https://www.dotandkey.com/products/watermelon-vitamin-c-face-wash-gel-1",
         product_id,
-        recommender_name
+        "Dermatologically Tested"
     ))
 
-    if not cursor.fetchone():
-
-        cursor.execute("""
-            INSERT INTO product_recommendations
-            (
-                product_id,
-                recommender_name,
-                recommender_title,
-                recommendation_reason,
-                reference_title,
-                reference_url
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            product_id,
-            recommender_name,
-            "Product Testing Evidence",
-            "The Watermelon SuperGlow Facial Gel Cleanser is listed as "
-            "dermatologically tested. It is a gel cleanser formulated "
-            "with ingredients including watermelon, cucumber and Vitamin C.",
-            "Dot & Key - Watermelon SuperGlow Facial Gel Cleanser",
-            "https://www.myntra.com/face-wash-and-cleanser/dot26key/dot--key-watermelon-super-glow-vitamin-c-face-wash-gel-for-oily-skin---120-ml/16549572/buy"
-        ))
-
-        print("Added:", product_name)
-
+    if cursor.rowcount > 0:
+        print("Updated:", product_name)
     else:
-        print("Already exists:", product_name)
+        print("Existing Dot & Key recommendation was not found.")
 
 else:
     print("Product not found:", product_name)
@@ -807,6 +795,7 @@ if product:
 
 else:
     print("Product not found:", product_name)
+
 
 conn.commit()
 conn.close()

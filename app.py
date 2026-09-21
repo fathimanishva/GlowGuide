@@ -17,6 +17,11 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+PROFILE_IMAGE_FOLDER = os.path.join("static", "profile_images")
+app.config["PROFILE_IMAGE_FOLDER"] = PROFILE_IMAGE_FOLDER
+
+os.makedirs(PROFILE_IMAGE_FOLDER, exist_ok=True)
+
 app.secret_key = os.getenv(
     "SECRET_KEY",
     "glowguide_secret_key"
@@ -1250,7 +1255,7 @@ def profile():
 
     # Get logged-in user's details
     cursor.execute(
-        "SELECT fullname, email FROM users WHERE email = ?",
+        "SELECT fullname, email, profile_image FROM users WHERE email = ?",
         (session["user_email"],)
     )
 
@@ -1283,6 +1288,62 @@ def profile():
         analysis_count=analysis_count,
         latest_analysis=latest_analysis
     )
+
+@app.route("/upload-profile-image", methods=["POST"])
+def upload_profile_image():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    if "profile_image" not in request.files:
+        return redirect("/profile")
+
+    image = request.files["profile_image"]
+
+    if image.filename == "":
+        return redirect("/profile")
+
+    allowed_extensions = {"png", "jpg", "jpeg", "webp"}
+
+    if "." not in image.filename:
+        return redirect("/profile")
+
+    extension = image.filename.rsplit(".", 1)[1].lower()
+
+    if extension not in allowed_extensions:
+        return redirect("/profile")
+
+    # Generate a unique filename
+    filename = (
+        "profile_"
+        + secrets.token_hex(8)
+        + "."
+        + extension
+    )
+
+    image_path = os.path.join(
+        app.config["PROFILE_IMAGE_FOLDER"],
+        filename
+    )
+
+    image.save(image_path)
+
+    # Save filename in database
+    conn = get_db_connection()
+
+    conn.execute("""
+        UPDATE users
+        SET profile_image = ?
+        WHERE email = ?
+    """, (
+        filename,
+        session["user_email"]
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/profile")
 
 @app.route("/recommendations")
 def recommendations():

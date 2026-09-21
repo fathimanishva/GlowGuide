@@ -1,341 +1,1128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Image - GlowGuide</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Image Analysis - GlowGuide</title>
 
-    <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
-    <link rel="stylesheet"
-    href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        :root {
+            --primary: #d94d72;
+            --primary-dark: #b9365c;
+            --pink-light: #fff0f4;
+            --page-bg: #fffafa;
+            --text-dark: #17213a;
+            --text-muted: #697087;
+            --border: #f0e4e7;
+            --purple-light: #f3edff;
+            --purple: #7652d6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text-dark);
+            font-family: "DM Sans", sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+
+        /* =========================
+           NAVBAR
+        ========================= */
+
+        .page-navbar {
+            height: 76px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-inner {
+            width: 100%;
+            max-width: 1120px;
+            margin: auto;
+            padding: 0 25px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: var(--text-dark);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #ffe2ea;
+
+            font-size: 21px;
+        }
+
+        .brand-name {
+            font-family: "Playfair Display", serif;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .back-dashboard {
+            color: #596176;
+            font-weight: 500;
+
+            padding: 9px 14px;
+            border-radius: 10px;
+
+            transition: 0.2s;
+        }
+
+        .back-dashboard:hover {
+            background: var(--pink-light);
+            color: var(--primary-dark);
+        }
+
+
+        /* =========================
+           PAGE
+        ========================= */
+
+        .analysis-container {
+            max-width: 1050px;
+            margin: auto;
+
+            padding: 45px 25px 70px;
+        }
+
+        .page-label {
+            color: #d96b89;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 3px;
+
+            margin-bottom: 7px;
+        }
+
+        .page-title {
+            font-family: "Playfair Display", serif;
+
+            font-size: 38px;
+            font-weight: 600;
+
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            color: var(--text-muted);
+
+            font-size: 16px;
+
+            margin-bottom: 32px;
+        }
+
+
+        /* =========================
+           MAIN CARD
+        ========================= */
+
+        .analysis-card {
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 22px;
+
+            padding: 32px;
+
+            box-shadow:
+                0 8px 30px rgba(70, 45, 55, 0.05);
+        }
+
+        .section-heading {
+            text-align: center;
+
+            margin-bottom: 28px;
+        }
+
+        .section-heading h3 {
+            font-family: "Playfair Display", serif;
+
+            font-size: 25px;
+            font-weight: 600;
+
+            margin-bottom: 7px;
+        }
+
+        .section-heading p {
+            color: var(--text-muted);
+
+            margin: 0;
+        }
+
+
+        /* =========================
+           METHOD CARDS
+        ========================= */
+
+        .method-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 22px;
+
+            margin-bottom: 30px;
+        }
+
+        .method-card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+
+            padding: 28px;
+
+            text-align: center;
+
+            background: #ffffff;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .method-card:hover {
+            transform: translateY(-3px);
+
+            border-color: #ecc4cf;
+
+            box-shadow:
+                0 8px 22px rgba(65, 40, 50, 0.06);
+        }
+
+        .method-icon {
+            width: 65px;
+            height: 65px;
+
+            margin: 0 auto 17px;
+
+            border-radius: 18px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 28px;
+        }
+
+        .upload-icon {
+            background: #ffe5ed;
+            color: var(--primary);
+        }
+
+        .camera-icon {
+            background: var(--purple-light);
+            color: var(--purple);
+        }
+
+        .method-card h4 {
+            font-size: 19px;
+            font-weight: 700;
+
+            margin-bottom: 8px;
+        }
+
+        .method-card p {
+            color: var(--text-muted);
+
+            font-size: 14px;
+            line-height: 1.6;
+
+            min-height: 45px;
+        }
+
+
+        /* =========================
+           FILE INPUT
+        ========================= */
+
+        .file-input {
+            margin-top: 20px;
+            margin-bottom: 14px;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border-color: #e3dde0;
+
+            min-height: 47px;
+        }
+
+        .form-control:focus {
+            border-color: #e6a6b8;
+
+            box-shadow:
+                0 0 0 0.15rem rgba(217, 77, 114, 0.1);
+        }
+
+
+        /* =========================
+           BUTTONS
+        ========================= */
+
+        .primary-button {
+            border: none;
+            border-radius: 10px;
+
+            background: var(--primary);
+            color: white;
+
+            padding: 11px 20px;
+
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+        .primary-button:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .camera-button {
+            border: 1px solid #cfc1f1;
+            border-radius: 10px;
+
+            background: white;
+            color: var(--purple);
+
+            padding: 10px 20px;
+
+            font-weight: 600;
+        }
+
+        .camera-button:hover {
+            background: var(--purple-light);
+        }
+
+        .capture-button {
+            border: none;
+            border-radius: 10px;
+
+            background: var(--purple);
+            color: white;
+
+            padding: 10px 20px;
+
+            font-weight: 600;
+        }
+
+
+        /* =========================
+           PHOTO TIPS
+        ========================= */
+
+        .tips-section {
+            background: #fff8fa;
+
+            border: 1px solid #f3e3e8;
+            border-radius: 16px;
+
+            padding: 22px 25px;
+
+            margin-top: 5px;
+        }
+
+        .tips-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            font-weight: 700;
+
+            margin-bottom: 15px;
+        }
+
+        .tips-title i {
+            color: var(--primary);
+        }
+
+        .tips-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 10px 25px;
+        }
+
+        .tip {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            color: #60677a;
+
+            font-size: 14px;
+        }
+
+        .tip i {
+            color: #3e9a74;
+        }
+
+
+        /* =========================
+           CURRENT IMAGE
+        ========================= */
+
+        .current-image-section {
+            margin-bottom: 30px;
+
+            padding: 25px;
+
+            border: 1px solid var(--border);
+            border-radius: 17px;
+
+            background: #fffdfd;
+
+            text-align: center;
+        }
+
+        .current-image-section h4 {
+            font-family: "Playfair Display", serif;
+
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .current-image {
+            display: block;
+
+            width: 100%;
+            max-width: 350px;
+            max-height: 380px;
+
+            object-fit: contain;
+
+            margin: 20px auto;
+
+            border-radius: 15px;
+
+            border: 1px solid var(--border);
+        }
+
+        .analyze-button {
+            display: inline-block;
+
+            background: var(--primary);
+            color: white;
+
+            padding: 11px 24px;
+
+            border-radius: 10px;
+
+            font-weight: 600;
+        }
+
+        .analyze-button:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+
+        /* =========================
+           CAMERA AREA
+        ========================= */
+
+        .camera-area {
+            margin-top: 20px;
+        }
+
+        #video,
+        #capturedImage {
+            width: 100%;
+            max-width: 440px;
+
+            height: 310px;
+
+            object-fit: cover;
+
+            border-radius: 15px;
+
+            border: 1px solid #e8e0ed;
+
+            margin: 18px auto 0;
+
+            display: none;
+        }
+
+        #capturedImage {
+            height: auto;
+        }
+
+        .camera-actions {
+            margin-top: 17px;
+
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 10px;
+        }
+
+        .use-photo-button {
+            border: none;
+            border-radius: 10px;
+
+            background: var(--primary);
+            color: white;
+
+            padding: 10px 20px;
+
+            font-weight: 600;
+        }
+
+
+        /* SUCCESS */
+
+        .success-message {
+            border: 1px solid #cfe9dc;
+            border-radius: 12px;
+
+            background: #f3fbf7;
+            color: #39785b;
+
+            padding: 12px 15px;
+
+            margin-bottom: 25px;
+        }
+
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 750px) {
+
+            .method-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-card {
+                padding: 22px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+        }
+
+    </style>
+
 </head>
 
-<body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-    <div class="container">
+<body>
 
-        <a class="navbar-brand fw-bold text-primary">
-            🌸 GlowGuide
+
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<nav class="page-navbar">
+
+    <div class="navbar-inner">
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="brand">
+
+            <div class="brand-icon">
+                🌸
+            </div>
+
+            <span class="brand-name">
+                GlowGuide
+            </span>
+
         </a>
 
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
-            Dashboard
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="back-dashboard">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Dashboard
+
         </a>
 
     </div>
+
 </nav>
 
-<div class="container mt-5">
 
-    <div class="card shadow p-5">
+<!-- =========================
+     PAGE
+========================= -->
 
-        <h2 class="fw-bold mb-3">
-            📷 Upload Your Skin Image
-        </h2>
+<main class="analysis-container">
 
-        <p class="text-muted">
-            Upload a clear photo of your face for AI-powered skin analysis.
-        </p>
 
-        <form method="POST" enctype="multipart/form-data">
+    <div class="page-label">
+        AI Skin Assessment
+    </div>
+
+
+    <h1 class="page-title">
+        Image Analysis
+    </h1>
+
+
+    <p class="page-description">
+        Add a clear photo of your face and let GlowGuide
+        analyze your skin using AI.
+    </p>
+
 
     {% if success %}
 
-    <div class="alert alert-success mt-4 text-center">
-        {{ success }}
-    </div>
+        <div class="success-message">
+
+            <i class="bi bi-check-circle me-2"></i>
+
+            {{ success }}
+
+        </div>
 
     {% endif %}
 
 
-    <div class="alert alert-info mt-3">
+    <!-- =========================
+         IF IMAGE ALREADY UPLOADED
+    ========================= -->
 
-        <h5>📷 Photo Guidelines</h5>
+    {% if image_name %}
 
-        <ul class="mb-0">
-            <li>Upload a clear front-facing photo of your face.</li>
-            <li>Ensure your face is fully visible.</li>
-            <li>Use good natural or bright lighting.</li>
-            <li>Remove glasses, masks, or heavy makeup if possible.</li>
-            <li>Avoid blurry, dark, or side-angle photos.</li>
-            <li>Accepted formats: JPG, JPEG, PNG.</li>
-        </ul>
+        <div class="current-image-section">
 
-    </div>
+            <h4>
+                Your Uploaded Photo
+            </h4>
 
+            <p class="text-muted">
+                Your photo is ready for skin analysis.
+            </p>
 
-   {% if image_name %}
 
-    <!-- Current Uploaded Image -->
+            <img
+                src="{{ url_for(
+                    'static',
+                    filename='uploads/' + image_name
+                ) }}"
+                class="current-image"
+                alt="Uploaded skin image">
 
-    <div class="text-center mt-4">
 
-        <h5>Current Uploaded Image</h5>
+            <form
+                method="POST"
+                action="{{ url_for('analyze_skin_route') }}">
 
-        <img
-            src="{{ url_for('static', filename='uploads/' + image_name) }}"
-            class="img-fluid rounded shadow mt-3"
-            style="max-width:350px;"
-        >
+                <button
+                    type="submit"
+                    class="analyze-button"
+                    style="border: none;">
 
-    </div>
+                    <i class="bi bi-stars me-2"></i>
+                    Analyze My Skin
 
+                </button>
 
-    <!-- Analyze Button -->
+            </form>
 
-    <div class="text-center mt-4">
+        </div>
 
-        <a href="{{ url_for('analysis') }}"
-           class="btn btn-success btn-lg px-5">
+    {% endif %}
 
-            <i class="bi bi-search me-2"></i>
-            Analyze Image
 
-        </a>
+    <!-- =========================
+         MAIN ANALYSIS CARD
+    ========================= -->
 
-    </div>
+    <section class="analysis-card">
 
 
-    <hr class="my-4">
+        <div class="section-heading">
 
-    <!-- Upload Another Image -->
+            <h3>
+                Choose how to add your photo
+            </h3>
 
-    <div class="mt-4">
+            <p>
+                Upload an existing image or capture one
+                directly using your camera.
+            </p>
 
-        <h5 class="text-center">
-            📷 Want to use a different photo?
-        </h5>
+        </div>
 
-        <input
-            type="file"
-            name="image"
-            class="form-control mb-3"
-            accept=".jpg,.jpeg,.png"
-        >
 
-        <button type="submit"
-                class="btn btn-primary w-100">
+        <div class="method-grid">
 
-            <i class="bi bi-cloud-arrow-up-fill me-2"></i>
-            Upload New Image
 
-        </button>
+            <!-- =========================
+                 UPLOAD PHOTO
+            ========================= -->
 
-    </div>
+            <div class="method-card">
 
 
-{% else %}
+                <div class="method-icon upload-icon">
 
-    <!-- First Image Upload -->
+                    <i class="bi bi-cloud-arrow-up"></i>
 
-    <input
-        type="file"
-        name="image"
-        class="form-control mb-4"
-        accept=".jpg,.jpeg,.png"
-        required
-    >
+                </div>
 
-    <button type="submit"
-            class="btn btn-primary w-100">
 
-        <i class="bi bi-cloud-arrow-up-fill me-2"></i>
-        Upload Image
+                <h4>
+                    Upload Photo
+                </h4>
 
-    </button>
 
+                <p>
+                    Choose a clear, front-facing photo
+                    from your device.
+                </p>
 
-{% endif %}
 
-</form>
+                <form
+                    method="POST"
+                    enctype="multipart/form-data">
 
 
-<!-- ============================= -->
-<!-- CAMERA CAPTURE SECTION -->
-<!-- ============================= -->
+                    <input
+                        type="file"
+                        name="image"
+                        class="form-control file-input"
+                        accept=".jpg,.jpeg,.png"
+                        required>
 
-<hr class="my-5">
 
-<div class="text-center">
+                    <button
+                        type="submit"
+                        class="primary-button w-100">
 
-    <h4 class="fw-bold mb-3">
-        <i class="bi bi-camera-fill me-2"></i>
-        Or Take a Photo
-    </h4>
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
 
-    <p class="text-muted">
-        Use your device camera to capture a clear photo for skin analysis.
-    </p>
+                        {% if image_name %}
 
-    <div class="mt-4">
+                            Upload Different Photo
 
-        <video id="video"
-               autoplay
-               playsinline
-               style="
-                   width: 100%;
-                   max-width: 500px;
-                   height: 380px;
-                   object-fit: cover;
-                   border-radius: 15px;
-                   display: none;
-               ">
-        </video>
+                        {% else %}
 
-    </div>
+                            Upload Photo
 
-    <div class="mt-3">
+                        {% endif %}
 
-        <button type="button"
-                id="startCamera"
-                class="btn btn-outline-primary px-4">
+                    </button>
 
-            <i class="bi bi-camera-video-fill me-2"></i>
-            Open Camera
+                </form>
 
-        </button>
+            </div>
 
-        <button type="button"
-                id="capturePhoto"
-                class="btn btn-success px-4 ms-2"
-                style="display:none;">
 
-            <i class="bi bi-camera-fill me-2"></i>
-            Capture Photo
+            <!-- =========================
+                 CAMERA
+            ========================= -->
 
-        </button>
+            <div class="method-card">
 
-    </div>
 
-    <canvas id="canvas"
-            style="display:none;">
-    </canvas>
+                <div class="method-icon camera-icon">
 
-    <div class="mt-4">
+                    <i class="bi bi-camera"></i>
 
-        <img id="capturedImage"
-             style="
-                 width: 100%;
-                 max-width: 500px;
-                 border-radius: 15px;
-                 display: none;
-             "
-             alt="Captured Photo">
+                </div>
 
-    </div>
 
-    <form method="POST"
-          action="/capture-photo"
-          class="mt-3">
+                <h4>
+                    Use Camera
+                </h4>
 
-        <input type="hidden"
-               name="image_data"
-               id="imageData">
 
-        <button type="submit"
-                id="usePhoto"
-                class="btn btn-primary btn-lg px-5"
-                style="display:none;">
+                <p>
+                    Capture a new photo directly
+                    inside GlowGuide.
+                </p>
 
-            <i class="bi bi-check-circle-fill me-2"></i>
-            Use This Photo
 
-        </button>
+                <div class="camera-area">
 
-    </form>
 
-</div>
+                    <button
+                        type="button"
+                        id="startCamera"
+                        class="camera-button">
 
+                        <i class="bi bi-camera-video me-2"></i>
+                        Open Camera
 
+                    </button>
 
-    </div>
 
-</div>
+                    <video
+                        id="video"
+                        autoplay
+                        playsinline>
+                    </video>
+
+
+                    <div class="camera-actions">
+
+                        <button
+                            type="button"
+                            id="capturePhoto"
+                            class="capture-button"
+                            style="display:none;">
+
+                            <i class="bi bi-camera me-2"></i>
+                            Capture Photo
+
+                        </button>
+
+                    </div>
+
+
+                    <canvas
+                        id="canvas"
+                        style="display:none;">
+                    </canvas>
+
+
+                    <img
+                        id="capturedImage"
+                        alt="Captured Photo">
+
+
+                    <form
+                        method="POST"
+                        action="/capture-photo"
+                        class="mt-3">
+
+                        <input
+                            type="hidden"
+                            name="image_data"
+                            id="imageData">
+
+
+                        <button
+                            type="submit"
+                            id="usePhoto"
+                            class="use-photo-button"
+                            style="display:none;">
+
+                            <i class="bi bi-check-circle me-2"></i>
+                            Use This Photo
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             PHOTO TIPS
+        ========================= -->
+
+        <div class="tips-section">
+
+
+            <div class="tips-title">
+
+                <i class="bi bi-lightbulb"></i>
+
+                Tips for a better analysis
+
+            </div>
+
+
+            <div class="tips-grid">
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Face clearly visible
+
+                </div>
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Use good natural or bright lighting
+
+                </div>
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Use a front-facing photo
+
+                </div>
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Avoid blurry or dark images
+
+                </div>
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Remove glasses or masks if possible
+
+                </div>
+
+
+                <div class="tip">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    JPG, JPEG and PNG supported
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+</main>
+
+
+<!-- =========================
+     CAMERA JAVASCRIPT
+========================= -->
 
 <script>
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
 
-const startCamera = document.getElementById("startCamera");
-const capturePhoto = document.getElementById("capturePhoto");
+const video =
+    document.getElementById("video");
 
-const capturedImage = document.getElementById("capturedImage");
-const imageData = document.getElementById("imageData");
-const usePhoto = document.getElementById("usePhoto");
+const canvas =
+    document.getElementById("canvas");
+
+const startCamera =
+    document.getElementById("startCamera");
+
+const capturePhoto =
+    document.getElementById("capturePhoto");
+
+const capturedImage =
+    document.getElementById("capturedImage");
+
+const imageData =
+    document.getElementById("imageData");
+
+const usePhoto =
+    document.getElementById("usePhoto");
+
 
 let stream = null;
 
-startCamera.addEventListener("click", async function () {
 
-    try {
+/* OPEN CAMERA */
 
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: true
-        });
+startCamera.addEventListener(
+    "click",
+    async function () {
 
-        video.srcObject = stream;
+        try {
 
-        video.style.display = "block";
-        capturePhoto.style.display = "inline-block";
-        startCamera.style.display = "none";
+            stream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+                        video: true
+                    });
 
-    } catch (error) {
 
-        console.error("Camera error:", error);
+            video.srcObject =
+                stream;
 
-        alert(
-            "Camera error: " +
-            error.name +
-            " - " +
-            error.message
+
+            video.style.display =
+                "block";
+
+
+            capturePhoto.style.display =
+                "inline-block";
+
+
+            startCamera.style.display =
+                "none";
+
+
+        } catch (error) {
+
+            console.error(
+                "Camera error:",
+                error
+            );
+
+
+            alert(
+                "Camera error: " +
+                error.name +
+                " - " +
+                error.message
+            );
+
+        }
+
+    }
+);
+
+
+/* CAPTURE PHOTO */
+
+capturePhoto.addEventListener(
+    "click",
+    function () {
+
+        if (!stream) {
+            return;
+        }
+
+
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+
+        const context =
+            canvas.getContext("2d");
+
+
+        context.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
         );
+
+
+        const photo =
+            canvas.toDataURL(
+                "image/jpeg"
+            );
+
+
+        capturedImage.src =
+            photo;
+
+        capturedImage.style.display =
+            "block";
+
+
+        imageData.value =
+            photo;
+
+
+        usePhoto.style.display =
+            "inline-block";
+
+
+        stream
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+
+        video.style.display =
+            "none";
+
+
+        capturePhoto.style.display =
+            "none";
+
+
+        startCamera.style.display =
+            "inline-block";
+
+
+        startCamera.innerHTML =
+            '<i class="bi bi-arrow-clockwise me-2"></i>Retake Photo';
+
     }
-});
+);
 
-
-capturePhoto.addEventListener("click", function () {
-
-    if (!stream) {
-        return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const context = canvas.getContext("2d");
-
-    context.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    const photo = canvas.toDataURL("image/jpeg");
-
-    capturedImage.src = photo;
-    capturedImage.style.display = "block";
-
-    imageData.value = photo;
-
-    usePhoto.style.display = "inline-block";
-
-    stream.getTracks().forEach(track => track.stop());
-
-    video.style.display = "none";
-    capturePhoto.style.display = "none";
-
-    startCamera.style.display = "inline-block";
-    startCamera.innerHTML =
-        '<i class="bi bi-arrow-clockwise me-2"></i>Retake Photo';
-});
 </script>
+
 
 </body>
 </html>
