@@ -837,7 +837,20 @@ def dashboard():
     if "user" not in session:
         return redirect("/login")
 
-    return render_template("dashboard.html")
+    conn = get_db_connection()
+
+    user = conn.execute("""
+        SELECT fullname, email, profile_image
+        FROM users
+        WHERE email = ?
+    """, (session["user_email"],)).fetchone()
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        user=user
+    )
 
 @app.route("/admin/dashboard")
 def admin_dashboard():
