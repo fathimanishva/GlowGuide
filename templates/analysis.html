@@ -7,74 +7,562 @@
 
     <title>Skin Analysis - GlowGuide</title>
 
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
           rel="stylesheet">
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+
+        /* =========================
+           GLOWGUIDE ANALYSIS PAGE
+        ========================= */
+
+        :root {
+            --primary: #e85d87;
+            --primary-dark: #c93663;
+            --pink-light: #fff0f4;
+            --pink-soft: #fff7f9;
+            --border: #f2dce3;
+            --text-dark: #17213a;
+            --text-muted: #70788a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", sans-serif;
+
+            min-height: 100vh;
+
+            color: var(--text-dark);
+
+            background:
+                radial-gradient(
+                    circle at 8% 20%,
+                    rgba(255, 205, 220, 0.35),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 92% 80%,
+                    rgba(255, 215, 228, 0.35),
+                    transparent 30%
+                ),
+                #fff8fa;
+        }
+
+
+        /* =========================
+           NAVBAR
+        ========================= */
+
+        .glow-navbar {
+            height: 76px;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            border-bottom: 1px solid var(--border);
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 35px;
+        }
+
+
+        /* GlowGuide Logo */
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+
+            border-radius: 50%;
+
+            background: #ffe0e9;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #e85d87;
+
+            font-size: 23px;
+        }
+
+        .brand-name {
+            margin: 0;
+
+            font-family: "Playfair Display", serif;
+
+            font-size: 27px;
+            font-weight: 600;
+
+            color: #17213a;
+        }
+
+        .brand-tagline {
+            margin: 2px 0 0;
+
+            font-size: 11px;
+
+            color: #9298a8;
+        }
+
+
+        /* Dashboard Button */
+
+        .dashboard-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 10px 17px;
+
+            border-radius: 10px;
+
+            border: 1px solid #f1cbd7;
+
+            background: #fff7f9;
+
+            color: var(--primary-dark);
+
+            font-size: 14px;
+            font-weight: 600;
+
+            text-decoration: none;
+
+            transition: 0.2s ease;
+        }
+
+        .dashboard-btn:hover {
+            background: #ffe9ef;
+            color: var(--primary-dark);
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================
+           MAIN AREA
+        ========================= */
+
+        .analysis-wrapper {
+            min-height: calc(100vh - 76px);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 45px 20px 60px;
+
+            position: relative;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================
+           DECORATION
+        ========================= */
+
+        .decor-left,
+        .decor-right {
+            position: absolute;
+
+            color: #f2b5c7;
+
+            opacity: 0.35;
+
+            pointer-events: none;
+        }
+
+        .decor-left {
+            left: -20px;
+            top: 100px;
+
+            font-size: 100px;
+
+            transform: rotate(-15deg);
+        }
+
+        .decor-right {
+            right: -20px;
+            bottom: 20px;
+
+            font-size: 110px;
+
+            transform: rotate(15deg);
+        }
+
+
+        /* =========================
+           MAIN CARD
+        ========================= */
+
+        .analysis-card {
+            width: 100%;
+            max-width: 820px;
+
+            background: rgba(255, 255, 255, 0.97);
+
+            border: 1px solid var(--border);
+
+            border-radius: 24px;
+
+            padding: 42px 50px 48px;
+
+            text-align: center;
+
+            box-shadow:
+                0 18px 45px rgba(197, 90, 120, 0.10);
+
+            position: relative;
+
+            z-index: 2;
+        }
+
+
+        /* =========================
+           TOP ICON
+        ========================= */
+
+        .analysis-icon {
+            width: 58px;
+            height: 58px;
+
+            margin: 0 auto 14px;
+
+            border-radius: 50%;
+
+            background: var(--pink-light);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: var(--primary);
+
+            font-size: 26px;
+        }
+
+
+        /* =========================
+           HEADING
+        ========================= */
+
+        .analysis-title {
+            margin: 0;
+
+            font-family: "Playfair Display", serif;
+
+            font-size: 42px;
+
+            font-weight: 600;
+
+            color: var(--text-dark);
+        }
+
+        .analysis-subtitle {
+            margin: 8px 0 30px;
+
+            color: var(--text-muted);
+
+            font-size: 16px;
+        }
+
+
+        /* =========================
+           IMAGE
+        ========================= */
+
+        .image-container {
+            display: flex;
+
+            justify-content: center;
+
+            margin-bottom: 30px;
+        }
+
+        .uploaded-image {
+            width: 400px;
+            max-width: 100%;
+
+            height: 300px;
+
+            object-fit: cover;
+
+            border-radius: 18px;
+
+            border: 3px solid #f5d4df;
+
+            box-shadow:
+                0 10px 28px rgba(190, 90, 120, 0.13);
+        }
+
+
+        /* =========================
+           ANALYZE BUTTON
+        ========================= */
+
+        .analyze-button {
+            border: none;
+
+            padding: 14px 30px;
+
+            min-width: 245px;
+
+            border-radius: 14px;
+
+            background: linear-gradient(
+                135deg,
+                #e85d87,
+                #d94c78
+            );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 600;
+
+            box-shadow:
+                0 8px 20px rgba(232, 93, 135, 0.24);
+
+            transition: all 0.25s ease;
+
+            cursor: pointer;
+        }
+
+        .analyze-button:hover {
+            transform: translateY(-2px);
+
+            background: linear-gradient(
+                135deg,
+                #d94c78,
+                #c93663
+            );
+
+            box-shadow:
+                0 12px 25px rgba(232, 93, 135, 0.30);
+        }
+
+        .analyze-button i {
+            margin-right: 7px;
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 768px) {
+
+            .glow-navbar {
+                padding: 0 18px;
+            }
+
+            .brand-name {
+                font-size: 23px;
+            }
+
+            .brand-tagline {
+                display: none;
+            }
+
+            .dashboard-btn span {
+                display: none;
+            }
+
+            .analysis-wrapper {
+                padding: 30px 15px 45px;
+            }
+
+            .analysis-card {
+                padding: 32px 20px 38px;
+
+                border-radius: 20px;
+            }
+
+            .analysis-title {
+                font-size: 34px;
+            }
+
+            .analysis-subtitle {
+                font-size: 14px;
+            }
+
+            .uploaded-image {
+                width: 100%;
+                height: 280px;
+            }
+
+            .decor-left,
+            .decor-right {
+                opacity: 0.15;
+            }
+        }
+
+    </style>
+
 </head>
 
-<body class="bg-light">
 
-<nav class="navbar navbar-light bg-white shadow-sm">
-    <div class="container">
+<body>
 
-        <a class="navbar-brand fw-bold text-primary">
-            🌸 GlowGuide
-        </a>
 
-        <a href="{{ url_for('dashboard') }}"
-           class="btn btn-outline-primary">
-            Dashboard
-        </a>
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<nav class="glow-navbar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            <i class="bi bi-flower1"></i>
+        </div>
+
+        <div>
+
+            <h1 class="brand-name">
+                GlowGuide
+            </h1>
+
+            <p class="brand-tagline">
+                Skincare Smarter, Brighter You
+            </p>
+
+        </div>
 
     </div>
+
+
+    <a href="{{ url_for('dashboard') }}"
+       class="dashboard-btn">
+
+        <i class="bi bi-grid"></i>
+
+        <span>Dashboard</span>
+
+    </a>
+
 </nav>
 
 
-<div class="container mt-5">
 
-    <div class="card shadow p-5 text-center">
+<!-- =========================
+     MAIN CONTENT
+========================= -->
 
-        <h2 class="fw-bold">
-            🔍 Skin Analysis
+<main class="analysis-wrapper">
+
+
+    <!-- Decorative Elements -->
+
+    <div class="decor-left">
+        <i class="bi bi-flower1"></i>
+    </div>
+
+    <div class="decor-right">
+        <i class="bi bi-flower1"></i>
+    </div>
+
+
+
+    <!-- =========================
+         ANALYSIS CARD
+    ========================= -->
+
+    <div class="analysis-card">
+
+
+        <!-- Icon -->
+
+        <div class="analysis-icon">
+
+            <i class="bi bi-stars"></i>
+
+        </div>
+
+
+        <!-- Heading -->
+
+        <h2 class="analysis-title">
+            Skin Analysis
         </h2>
 
-        <p class="text-muted">
+
+        <p class="analysis-subtitle">
             Your uploaded image is ready for analysis.
         </p>
 
 
-        <!-- Uploaded Image -->
 
-        <div class="mt-4">
+        <!-- =========================
+             UPLOADED IMAGE
+        ========================= -->
+
+        <div class="image-container">
 
             <img
                 src="{{ url_for('static', filename='uploads/' + image_name) }}"
-                class="img-fluid rounded shadow"
-                style="max-width: 400px;"
+                alt="Uploaded skin image"
+                class="uploaded-image"
             >
 
         </div>
 
 
-        <!-- Analyze Button -->
 
-        <div class="mt-4">
+        <!-- =========================
+             ANALYZE FORM
+        ========================= -->
 
-            <form method="POST" action="{{ url_for('analyze_skin_route') }}">
+        <form
+            method="POST"
+            action="{{ url_for('analyze_skin_route') }}"
+        >
 
-             <button type="submit" class="btn btn-success btn-lg px-5">
-              🔍 Analyze My Skin
+            <button
+                type="submit"
+                class="analyze-button"
+            >
+
+                <i class="bi bi-stars"></i>
+
+                Analyze My Skin
+
+                <i class="bi bi-arrow-right"></i>
+
             </button>
 
-             </form>
+        </form>
 
-        </div>
 
     </div>
 
-</div>
+</main>
+
 
 </body>
 </html>
