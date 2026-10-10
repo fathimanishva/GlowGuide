@@ -469,52 +469,72 @@ def analysis():
 
 @app.route("/analyze-skin", methods=["POST"])
 def analyze_skin_route():
-
     if "user" not in session:
         return redirect("/login")
 
     image_name = session.get("image_name")
-
     if not image_name:
         return redirect("/upload")
 
-    image_path = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        image_name
-    )
+    image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_name)
 
-    # Run AI analysis
+    # 1. Run AI analysis
     results = analyze_skin(image_path)
-
-    # Find the result with the highest confidence
     best_result = max(results, key=lambda x: x["score"])
-
     skin_type = best_result["label"].lower()
 
-    # Store AI detected skin type for product recommendations
+    # 2. Store intermediate results in session (do not write to DB yet)
     session["ai_skin_type"] = skin_type
+    session["ai_confidence"] = float(best_result["score"])
+    session["ai_results"] = results
     session["recommendation_source"] = "ai"
 
-    # Save AI analysis to history
+    # 3. Direct user to sensitivity check instead of results.html
+    return render_template(
+        "sensitivity_check.html",
+        skin_type=skin_type.capitalize()
+    )
+
+
+@app.route("/finalize-analysis", methods=["POST"])
+def finalize_analysis():
+    if "user" not in session:
+        return redirect("/login")
+
+    skin_type = session.get("ai_skin_type")
+    confidence = session.get("ai_confidence")
+    results = session.get("ai_results", [])
+    image_name = session.get("image_name")
+
+    if not skin_type:
+        return redirect("/upload")
+
+    # 1. Capture sensitivity response from user form
+    is_sensitive = request.form.get("is_sensitive") == "yes"
+    session["is_sensitive"] = is_sensitive
+
+    # Combine skin type if sensitive
+    display_skin_type = f"{skin_type} (Sensitive)" if is_sensitive else skin_type
+    session["final_skin_type"] = display_skin_type
+
+    # 2. Save final combined analysis to history
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-    INSERT INTO analysis_history
-    (user_email, method, skin_type, confidence, image_name)
-    VALUES (?, ?, ?, ?, ?)
+        INSERT INTO analysis_history
+        (user_email, method, skin_type, confidence, image_name)
+        VALUES (?, ?, ?, ?, ?)
     """, (
-    session["user_email"],
-    "AI Image",
-    skin_type,
-    best_result["score"],
-    image_name
+        session["user_email"],
+        "AI Image + Sensitivity Check",
+        display_skin_type,
+        confidence,
+        image_name
     ))
-
     conn.commit()
     conn.close()
 
-    # Recommendations based on skin type
+    # 3. Recommendations mapping
     recommendations = {
         "dry": [
             "Use a gentle, hydrating cleanser.",
@@ -522,14 +542,12 @@ def analyze_skin_route():
             "Avoid very hot water and harsh cleansers.",
             "Use sunscreen during the daytime."
         ],
-
         "oily": [
             "Use a gentle cleanser suitable for oily skin.",
             "Choose lightweight, non-comedogenic moisturizers.",
             "Avoid excessive washing, which can irritate the skin.",
             "Use sunscreen during the daytime."
         ],
-
         "normal": [
             "Use a gentle cleanser.",
             "Keep your skin moisturized.",
@@ -538,18 +556,22 @@ def analyze_skin_route():
         ]
     }
 
-    selected_recommendations = recommendations.get(
-        skin_type,
-        []
-    )
+    selected_recommendations = list(recommendations.get(skin_type, []))
 
+    # Add sensitive-skin-specific recommendations if flagged
+    if is_sensitive:
+        selected_recommendations.append("Avoid artificial fragrances, drying alcohols, and harsh scrubs.")
+        selected_recommendations.append("Always perform a patch test on your inner arm before trying new products.")
+
+    # 4. Render the final results page
     return render_template(
         "results.html",
         image_name=image_name,
         results=results,
-        skin_type=skin_type,
+        skin_type=display_skin_type,
         recommendations=selected_recommendations
     )
+
 @app.route("/questionnaire", methods=["GET", "POST"])
 def questionnaire():
 
@@ -592,7 +614,22 @@ def questionnaire():
 
 
         # Find highest skin-type score
-        skin_type = max(scores, key=scores.get)
+        # 1. Get the highest score number (e.g., 2)
+        max_score = max(scores.values())
+        
+        # 2. Find ALL skin types that got that highest score
+        top_types = [k for k, v in scores.items() if v == max_score]
+
+        # 3. Tie-breaker logic
+        if len(top_types) > 1:
+            # If there's a tie that includes both oily and dry traits, it's combination.
+            if "dry" in top_types and "oily" in top_types:
+                skin_type = "combination"
+            # Otherwise, default to combination as the safest middle-ground for tied answers
+            else:
+                skin_type = "combination"
+        else:
+            skin_type = top_types[0]
 
 
         # -----------------------------
